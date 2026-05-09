@@ -1,0 +1,72 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Review Progress Report{% endblock %}
+{% block page_title %}Review Progress Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5>Report Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Student</th>
+                        <td>{{ report.student.user.get_full_name }} ({{ report.student.registration_no }})</td>
+                    </tr>
+                    <tr>
+                        <th>Semester</th>
+                        <td>{{ report.semester }}</td>
+                    </tr>
+                    <tr>
+                        <th>Submitted</th>
+                        <td>{{ report.submission_date|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>File</th>
+                        <td>
+                            <a href="{{ report.file.url }}" class="btn btn-sm btn-primary" target="_blank">
+                                <i class="fas fa-download"></i> Download Report
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Provide Feedback</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="text-danger">{{ form.status.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.supervisor_feedback.id_for_label }}" class="form-label">Feedback</label>
+                        {{ form.supervisor_feedback }}
+                        {% if form.supervisor_feedback.errors %}
+                            <div class="text-danger">{{ form.supervisor_feedback.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">Provide detailed feedback to the student.</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">Submit Review</button>
+                    <a href="{% url 'supervisor_progress_list' %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

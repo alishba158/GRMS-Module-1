@@ -1,0 +1,68 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Progress Reports - Admin{% endblock %}
+{% block page_title %}Progress Reports{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-chart-line text-primary me-2"></i>
+            All Progress Reports
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Semester</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                                <div>
+                                    <strong>{{ report.student.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ report.student.registration_no }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ report.semester }}</span></td>
+                        <td>{{ report.submission_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="status-badge 
+                                {% if report.status == 'Accepted' %}badge-approved
+                                {% elif report.status == 'Submitted' %}badge-pending
+                                {% else %}badge-rejected{% endif %}">
+                                {{ report.status }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'admin_progress_detail' report.id %}" class="btn btn-outline-success btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No progress reports found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

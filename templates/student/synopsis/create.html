@@ -1,0 +1,39 @@
+{% extends 'student/base.html' %}
+{% block title %}Submit Synopsis - GRMS{% endblock %}
+{% block page_title %}Submit New Synopsis{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-upload"></i> Synopsis Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" action="{% url 'student_synopsis_create' %}">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label">Title <span class="text-danger">*</span></label>
+                <input type="text" name="title" class="form-control" required>
+                <small class="text-muted">Enter a descriptive title for your research</small>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">File (PDF only) <span class="text-danger">*</span></label>
+                <input type="file" name="file" class="form-control" accept=".pdf" required>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Maximum file size: <strong>5MB</strong>. Only PDF files are accepted.
+                </small>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn-action">
+                    <i class="fas fa-paper-plane"></i> Submit Synopsis
+                </button>
+                <a href="{% url 'student_synopsis_list' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

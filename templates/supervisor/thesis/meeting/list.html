@@ -1,0 +1,92 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Meetings - Supervisor{% endblock %}
+{% block page_title %}Meetings{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-calendar-check"></i> All Meetings</h5>
+        <a href="{% url 'supervisor_meeting_create' %}" class="btn-action">
+            <i class="fas fa-plus"></i> Schedule Meeting
+        </a>
+    </div>
+    <div class="card-body">
+        <!-- Filter Bar -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search student or agenda" value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <select name="mode" class="form-control">
+                    <option value="">All Modes</option>
+                    <option value="Online" {% if mode_filter == 'Online' %}selected{% endif %}>Online</option>
+                    <option value="In-Person" {% if mode_filter == 'In-Person' %}selected{% endif %}>In-Person</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_from" class="form-control" placeholder="From" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_to" class="form-control" placeholder="To" value="{{ date_to }}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-md-1">
+                <a href="{% url 'supervisor_meeting_list' %}" class="btn btn-secondary w-100">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Date & Time</th>
+                        <th>Mode</th>
+                        <th>Agenda</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meeting in meetings %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                                <div>
+                                    <strong>{{ meeting.student.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ meeting.student.registration_no }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ meeting.meeting_date|date:"M d, Y h:i A" }}</td>
+                        <td>
+                            <span class="badge" style="background: #3498db;">{{ meeting.mode }}</span>
+                        </td>
+                        <td>{{ meeting.agenda|truncatechars:30 }}</td>
+                        <td>
+                            <a href="{% url 'supervisor_meeting_detail' meeting.id %}" class="btn-action btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'supervisor_meeting_update' meeting.id %}" class="btn-action btn-sm" title="Update">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No meetings found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

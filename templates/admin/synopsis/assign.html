@@ -1,0 +1,35 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Assign Supervisor - Admin{% endblock %}
+{% block page_title %}Assign Supervisor to Synopsis{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-user-tie"></i> Assign Supervisor</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Synopsis:</strong> {{ synopsis.title }}</p>
+        <p><strong>Student:</strong> {{ synopsis.student.user.get_full_name }}</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Select Supervisor</label>
+                <select name="supervisor" class="form-control" required>
+                    <option value="">-- Choose Supervisor --</option>
+                    {% for sup in supervisors %}
+                        <option value="{{ sup.id }}">{{ sup.user.get_full_name }} ({{ sup.department }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-action">
+                <i class="fas fa-check"></i> Assign
+            </button>
+            <a href="{% url 'admin_synopsis_list' %}" class="btn btn-secondary ms-2">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

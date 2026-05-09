@@ -1,0 +1,40 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Meeting Detail - Admin{% endblock %}
+{% block page_title %}Meeting Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-calendar-check"></i> Meeting</h5>
+        <a href="{% url 'admin_meeting_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Student:</th><td>{{ meeting.student.user.get_full_name }}</td></tr>
+                    <tr><th>Supervisor:</th><td>{{ meeting.supervisor.user.get_full_name }}</td></tr>
+                    <tr><th>Date & Time:</th><td>{{ meeting.meeting_date|date:"M d, Y h:i A" }}</td></tr>
+                    <tr><th>Mode:</th><td>{{ meeting.mode }}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Agenda:</th><td>{{ meeting.agenda|default:"—" }}</td></tr>
+                    <tr><th>Summary:</th><td>{{ meeting.summary|default:"—" }}</td></tr>
+                </table>
+            </div>
+        </div>
+        {% if meeting.minutes_file %}
+        <hr>
+        <a href="{{ meeting.minutes_file.url }}" target="_blank" class="btn-action">
+            <i class="fas fa-download"></i> Download Minutes
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

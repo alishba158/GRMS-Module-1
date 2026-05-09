@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - GRMS | FUUAST</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+    <div class="nav-left">
+        <!-- Logo image hata diya -->
+        <span class="brand-name">GRMS</span>
+    </div>
+    <div class="nav-right">
+        <a href="{% url 'home' %}" class="nav-link">Home</a>
+        <a href="{% url 'home' %}#about" class="nav-link">About</a>
+        <a href="{% url 'home' %}#features" class="nav-link">Features</a>
+        <a href="{% url 'home' %}#help" class="nav-link">Help</a>
+        <a href="{% url 'login' %}" class="login-btn">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>Login</span>
+        </a>
+    </div>
+    
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+    <a href="{% url 'home' %}" class="mobile-link">Home</a>
+    <a href="{% url 'home' %}#about" class="mobile-link">About</a>
+    <a href="{% url 'home' %}#features" class="mobile-link">Features</a>
+    <a href="{% url 'home' %}#help" class="mobile-link">Help</a>
+    <a href="{% url 'login' %}" class="mobile-login">Login</a>
+</div>
+
+<div class="auth-container">
+    <div class="auth-card register-card" data-aos="fade-up">
+        <div class="auth-header">
+            <h3>Create Account</h3>
+            <p>Join GRMS research community</p>
+        </div>
+        
+        <form method="post" class="auth-form" id="registerForm">
+            {% csrf_token %}
+            
+            <!-- Full Name Field -->
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="fullname" placeholder="Full Name" required>
+            </div>
+            <div class="field-guidance">
+                <i class="fas fa-info-circle"></i>
+                Enter your full name as per university record
+            </div>
+            
+            <!-- Username Field -->
+<div class="input-group">
+    <i class="fas fa-user-tag"></i>
+    <input type="text" name="username" placeholder="Username" required>
+</div>
+<div class="field-guidance">
+    <i class="fas fa-info-circle"></i>
+    Choose a unique username (letters, numbers, and underscore only)
+</div>
+            
+            <!-- Email Field -->
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" name="email" placeholder="Email Address" required>
+            </div>
+            <div class="field-guidance">
+                <i class="fas fa-info-circle"></i>
+                Use your university email or personal email
+            </div>
+            
+            <!-- Role Field -->
+            <div class="input-group">
+                <i class="fas fa-user-graduate"></i>
+                <select name="role" required>
+                    <option value="" disabled selected>Select Role</option>
+                    <option value="Student">Student</option>
+                    <option value="Supervisor">Supervisor</option>
+                </select>
+            </div>
+            <div class="field-guidance">
+                <i class="fas fa-info-circle"></i>
+                Select your role - Student for researchers, Supervisor for faculty members
+            </div>
+            
+            <!-- Password Field -->
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" id="password" placeholder="Password" required>
+            </div>
+            <div class="field-guidance">
+                <i class="fas fa-info-circle"></i>
+                Minimum 8 characters with at least 1 uppercase, 1 lowercase, and 1 number
+            </div>
+            
+            <!-- Confirm Password Field -->
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="confirm_password" id="confirmPassword" placeholder="Confirm Password" required>
+            </div>
+            <div class="field-guidance" id="passwordMatchGuidance">
+                <i class="fas fa-circle"></i> Passwords must match
+            </div>
+            
+            <!-- Password Match Indicator -->
+            <div class="password-match-indicator" id="passwordMatchIndicator" style="display: none;">
+                <i class="fas fa-check-circle"></i> Passwords match
+            </div>
+            
+            <button type="submit" class="auth-btn register-btn" id="registerBtn">
+                <i class="fas fa-user-plus"></i>
+                Create Account
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'login' %}">Sign In</a></p>
+            <p class="terms-text">By registering, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="{% static 'js/auth.js' %}"></script>
+
+<script>
+    AOS.init({
+        duration: 1000,
+        once: true
+    });
+</script>
+</body>
+</html>

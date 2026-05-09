@@ -1,0 +1,38 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Update Meeting - Supervisor{% endblock %}
+{% block page_title %}Update Meeting{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-edit"></i> Add Meeting Summary & Minutes</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label">Meeting Summary</label>
+                <textarea name="summary" class="form-control" rows="5" required>{{ meeting.summary }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Meeting Minutes (PDF)</label>
+                <input type="file" name="minutes" class="form-control" accept=".pdf">
+                <small class="text-muted">Upload meeting minutes document (optional)</small>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn-action">
+                    <i class="fas fa-save"></i> Save Updates
+                </button>
+                <a href="{% url 'supervisor_meeting_detail' meeting.id %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

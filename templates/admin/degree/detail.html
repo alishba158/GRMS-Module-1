@@ -1,0 +1,128 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Degree Request Details{% endblock %}
+{% block page_title %}Degree Request #{{ degree.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Request from {{ degree.student.user.get_full_name }}</h5>
+                    <span class="badge bg-light text-dark">ID: {{ degree.id }}</span>
+                </div>
+                <div class="card-body">
+                    <!-- Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Status Badge -->
+                    <div class="text-center mb-4">
+                        <span class="badge fs-4 p-3 
+                            {% if degree.verification_status == 'Issued' %}bg-success
+                            {% elif degree.verification_status == 'Verified' %}bg-info
+                            {% elif degree.verification_status == 'Rejected' %}bg-danger
+                            {% else %}bg-warning text-dark{% endif %}">
+                            {{ degree.get_verification_status_display }}
+                        </span>
+                    </div>
+
+                    <!-- Student Info Card -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <i class="fas fa-user-graduate me-2"></i>Student Information
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Full Name:</strong> {{ degree.student.user.get_full_name }}</p>
+                                    <p><strong>Registration No:</strong> {{ degree.student.registration_no }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Program:</strong> {{ degree.student.program }}</p>
+                                    <p><strong>Department:</strong> {{ degree.student.department }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Session:</strong> {{ degree.student.session }}</p>
+                                    <p><strong>Enrollment Status:</strong> {{ degree.student.get_enrollment_status_display }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Request Details Card -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <i class="fas fa-info-circle me-2"></i>Request Details
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th style="width: 200px;">Request Date</th>
+                                    <td>{{ degree.request_date|date:"F d, Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Issue Date</th>
+                                    <td>{{ degree.issue_date|date:"F d, Y"|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Verified By</th>
+                                    <td>{{ degree.verified_by.user.get_full_name|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Remarks</th>
+                                    <td>{{ degree.remarks|linebreaks|default:"—" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Degree Letter</th>
+                                    <td>
+                                        {% if degree.letter_file %}
+                                            <a href="{{ degree.letter_file.url }}" class="btn btn-sm btn-success" download>
+                                                <i class="fas fa-download"></i> Download PDF
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Not yet issued</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between flex-wrap gap-2">
+                        <a href="{% url 'admin_degree_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to List
+                        </a>
+                        <div>
+                            {% if degree.verification_status == 'Pending' %}
+                                <a href="{% url 'admin_degree_verify' degree.id %}" class="btn btn-warning me-2">
+                                    <i class="fas fa-clipboard-check me-2"></i>Verify / Reject
+                                </a>
+                            {% endif %}
+                            {% if degree.verification_status == 'Verified' %}
+                                <a href="{% url 'admin_degree_issue' degree.id %}" class="btn btn-primary">
+                                    <i class="fas fa-file-pdf me-2"></i>Generate & Issue PDF
+                                </a>
+                            {% endif %}
+                            {% if degree.letter_file %}
+                                <a href="{{ degree.letter_file.url }}" class="btn btn-success" download>
+                                    <i class="fas fa-download me-2"></i>Download PDF
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

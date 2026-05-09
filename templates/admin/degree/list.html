@@ -1,0 +1,103 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Degree Requests - Admin{% endblock %}
+{% block page_title %}Degree Letter Requests{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>All Degree Requests</h5>
+            <span class="badge bg-light text-dark">{{ degrees.count }} Total</span>
+        </div>
+        <div class="card-body">
+            <!-- Filter and Search (optional) -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <input type="text" name="student" class="form-control" placeholder="Search student..." value="{{ request.GET.student }}">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="Pending" {% if request.GET.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="Verified" {% if request.GET.status == 'Verified' %}selected{% endif %}>Verified</option>
+                                <option value="Rejected" {% if request.GET.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                <option value="Issued" {% if request.GET.status == 'Issued' %}selected{% endif %}>Issued</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{% url 'admin_degree_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Requests Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Request Date</th>
+                            <th>Status</th>
+                            <th>Issued Date</th>
+                            <th>Verified By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for deg in degrees %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                                    <div>
+                                        <strong>{{ deg.student.user.get_full_name }}</strong><br>
+                                        <small class="text-muted">{{ deg.student.registration_no }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ deg.request_date|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <span class="badge fs-6 
+                                    {% if deg.verification_status == 'Issued' %}bg-success
+                                    {% elif deg.verification_status == 'Verified' %}bg-info
+                                    {% elif deg.verification_status == 'Rejected' %}bg-danger
+                                    {% else %}bg-warning text-dark{% endif %}">
+                                    {{ deg.get_verification_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ deg.issue_date|date:"M d, Y"|default:"—" }}</td>
+                            <td>{{ deg.verified_by.user.get_full_name|default:"—" }}</td>
+                            <td>
+                                <a href="{% url 'admin_degree_detail' deg.id %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if deg.letter_file %}
+                                    <a href="{{ deg.letter_file.url }}" class="btn btn-sm btn-outline-success" title="Download PDF" download>
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <p class="lead">No degree requests found.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

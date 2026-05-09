@@ -1,0 +1,58 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block title %}Request Extension - GRMS{% endblock %}
+{% block page_title %}Request Extension{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Extension Request Form</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.reason.id_for_label }}" class="form-label">Reason for Extension <span class="text-danger">*</span></label>
+                            {{ form.reason }}
+                            {% if form.reason.errors %}
+                                <div class="text-danger small">{{ form.reason.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.requested_duration.id_for_label }}" class="form-label">Requested Duration (in days) <span class="text-danger">*</span></label>
+                            {{ form.requested_duration }}
+                            {% if form.requested_duration.errors %}
+                                <div class="text-danger small">{{ form.requested_duration.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.supporting_document.id_for_label }}" class="form-label">Supporting Document (PDF)</label>
+                            {{ form.supporting_document }}
+                            {% if form.supporting_document.errors %}
+                                <div class="text-danger small">{{ form.supporting_document.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Optional, but recommended. Max 5MB, only PDF.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane"></i> Submit Request
+                            </button>
+                            <a href="{% url 'student_extension_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - GRMS{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Mobile Toggle Button -->
+<button class="mobile-toggle" id="mobileToggle">
+    <i class="fas fa-bars"></i>
+</button>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <img src="{% static 'images/logo.png' %}" alt="GRMS Logo" style="height: 50px;">
+        <h4>GRMS Admin</h4>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div class="nav-menu">
+        <a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a href="{% url 'admin_student_list' %}"><i class="fas fa-user-graduate"></i> Students</a>
+        <a href="{% url 'admin_supervisor_list' %}"><i class="fas fa-chalkboard-teacher"></i> Supervisors</a>
+        <a href="{% url 'admin_synopsis_list' %}"><i class="fas fa-file-alt"></i> Synopsis</a>
+        <a href="{% url 'admin_thesis_list' %}"><i class="fas fa-scroll"></i> Thesis</a>
+        <a href="{% url 'admin_progress_list' %}"><i class="fas fa-chart-line"></i> Progress</a>
+        <a href="{% url 'admin_meeting_list' %}"><i class="fas fa-calendar-check"></i> Meetings</a>
+        <a href="{% url 'admin_extension_list' %}"><i class="fas fa-hourglass-half"></i> Extensions</a>
+        <a href="{% url 'admin_degree_list' %}"><i class="fas fa-graduation-cap"></i> Degree Letters</a>
+    </div>
+    
+    <!-- Notifications Section -->
+    <div class="notifications-container">
+        <a href="{% url 'all_notifications' %}" class="notification-link">
+            <i class="fas fa-bell"></i> Notifications
+            {% if unread_count %}
+                <span class="notification-badge">{{ unread_count }}</span>
+            {% endif %}
+        </a>
+        <div class="notification-dropdown">
+            <div class="notification-header">
+                <h6>Notifications</h6>
+                <a href="{% url 'mark_all_read' %}">Mark all read</a>
+            </div>
+            <div class="notification-body">
+                {% if unread_notifications %}
+                    {% for notif in unread_notifications %}
+                        <a href="{{ notif.link|default:'#' }}" class="notification-item">
+                            <p>{{ notif.message|truncatechars:50 }}</p>
+                            <small>{{ notif.created_at|timesince }} ago</small>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-muted">No new notifications</p>
+                {% endif %}
+            </div>
+            <div class="notification-footer">
+                <a href="{% url 'all_notifications' %}">View all</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logout Button (Bottom Fixed) -->
+    <div class="logout-container">
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content" id="mainContent">
+    <div class="header">
+        <h1>{% block page_title %}Admin Dashboard{% endblock %}</h1>
+    </div>
+    {% block content %}{% endblock %}
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="{% static 'js/admin.js' %}"></script>
+<script>
+    AOS.init({ duration: 600, once: true, offset: 5 });
+    
+    // Mobile sidebar toggle
+    const mobileToggle = document.getElementById('mobileToggle');
+    const sidebar = document.getElementById('sidebar');
+    if (mobileToggle && sidebar) {
+        mobileToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+        });
+    }
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,46 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Synopsis Detail - Admin{% endblock %}
+{% block page_title %}Synopsis Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-file-alt"></i> {{ synopsis.title }}</h5>
+        <a href="{% url 'admin_synopsis_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Student:</th><td>{{ synopsis.student.user.get_full_name }}</td></tr>
+                    <tr><th>Registration No:</th><td>{{ synopsis.student.registration_no }}</td></tr>
+                    <tr><th>Program:</th><td>{{ synopsis.student.program }}</td></tr>
+                    <tr><th>Submitted:</th><td>{{ synopsis.submission_date|date:"M d, Y" }}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Supervisor:</th><td>{{ synopsis.supervisor.user.get_full_name|default:"Not Assigned" }}</td></tr>
+                    <tr><th>Status:</th><td>
+                        <span class="badge-custom 
+                            {% if synopsis.status == 'Approved' %}badge-approved
+                            {% elif synopsis.status == 'Pending' %}badge-pending
+                            {% else %}badge-rejected{% endif %}">
+                            {{ synopsis.status }}
+                        </span>
+                    </td></tr>
+                    <tr><th>Remarks:</th><td>{{ synopsis.remarks|default:"—" }}</td></tr>
+                </table>
+            </div>
+        </div>
+        <hr>
+        <a href="{{ synopsis.file.url }}" target="_blank" class="btn-action">
+            <i class="fas fa-download"></i> Download Synopsis
+        </a>
+    </div>
+</div>
+{% endblock %}

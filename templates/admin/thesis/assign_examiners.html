@@ -1,0 +1,13 @@
+{% extends 'admin/base.html' %}
+{% block title %}Assign Examiners{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Assign Examiners for Thesis: {{ thesis.title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Assign</button>
+        <a href="{% url 'admin_thesis_detail' thesis.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Extensions - Admin{% endblock %}
+{% block page_title %}Extension Requests{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-hourglass-half text-danger me-2"></i>
+            All Extension Requests
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Requested Days</th>
+                        <th>Request Date</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ext in extensions %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                                <div>
+                                    <strong>{{ ext.student.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ ext.student.registration_no }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-warning text-dark">{{ ext.requested_duration }} days</span></td>
+                        <td>{{ ext.request_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="status-badge 
+                                {% if ext.status == 'Approved' %}badge-approved
+                                {% elif ext.status == 'Pending' %}badge-pending
+                                {% else %}badge-rejected{% endif %}">
+                                {{ ext.status }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'admin_extension_detail' ext.id %}" class="btn btn-outline-success btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="fas fa-hourglass fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No extension requests found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

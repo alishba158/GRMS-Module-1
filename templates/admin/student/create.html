@@ -1,0 +1,101 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Create Student - Admin{% endblock %}
+{% block page_title %}Add New Student{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-user-plus"></i> Student Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Registration No <span class="text-danger">*</span></label>
+                    <input type="text" name="registration_no" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Department</label>
+                    <input type="text" name="department" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Session</label>
+                    <input type="text" name="session" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Program</label>
+                    <input type="text" name="program" class="form-control">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Enrollment Status</label>
+                    <select name="enrollment_status" class="form-control">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Withdrawn">Withdrawn</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Supervisor</label>
+                    <select name="supervisor" class="form-control">
+                        <option value="">-- Select Supervisor --</option>
+                        {% for sup in supervisors %}
+                            <option value="{{ sup.id }}">{{ sup.user.get_full_name }} ({{ sup.department }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Admission Date</label>
+                <input type="date" name="admission_date" class="form-control">
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn-action">
+                    <i class="fas fa-save"></i> Create Student
+                </button>
+                <a href="{% url 'admin_student_list' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

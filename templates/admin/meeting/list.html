@@ -1,0 +1,79 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Meetings - Admin{% endblock %}
+{% block page_title %}Meetings Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-calendar-check text-primary me-2"></i>
+            All Meetings
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Supervisor</th>
+                        <th>Date & Time</th>
+                        <th>Mode</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meeting in meetings %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-graduate fa-2x text-secondary me-2"></i>
+                                <div>
+                                    <strong>{{ meeting.student.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ meeting.student.registration_no }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-chalkboard-teacher fa-2x text-secondary me-2"></i>
+                                <div>
+                                    <strong>{{ meeting.supervisor.user.get_full_name }}</strong>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <i class="far fa-calendar-alt text-muted me-1"></i>
+                            {{ meeting.meeting_date|date:"M d, Y" }}<br>
+                            <i class="far fa-clock text-muted me-1"></i>
+                            {{ meeting.meeting_date|date:"h:i A" }}
+                        </td>
+                        <td>
+                            <span class="badge {% if meeting.mode == 'Online' %}bg-info{% else %}bg-secondary{% endif %}">
+                                {{ meeting.mode }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'admin_meeting_detail' meeting.id %}" class="btn btn-outline-success" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No meetings scheduled</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

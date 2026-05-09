@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Review Synopsis: {{ synopsis.title }}</h2>
+<p>Student: {{ synopsis.student.user.get_full_name }}</p>
+<p>Submitted: {{ synopsis.submission_date }}</p>
+<p><a href="{{ synopsis.document.url }}" target="_blank">View Document</a></p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Submit Review</button>
+    <a href="{% url 'supervisor_synopsis_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

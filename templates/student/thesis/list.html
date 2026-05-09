@@ -1,0 +1,35 @@
+{% extends 'student/base.html' %}
+{% block title %}My Theses - GRMS{% endblock %}
+{% block page_title %}My Theses{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-scroll"></i> Theses List</h5>
+        <a href="{% url 'student_thesis_create' %}" class="btn-action"><i class="fas fa-plus"></i> Submit New</a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for thesis in theses %}
+                <tr>
+                    <td>{{ thesis.title }}</td>
+                    <td>{{ thesis.submission_date|date:"M d, Y" }}</td>
+                    <td><span class="status-badge status-{{ thesis.status|lower }}">{{ thesis.status }}</span></td>
+                    <td><a href="{% url 'student_thesis_detail' thesis.id %}" class="btn-action" style="padding:0.2rem 0.8rem;">View</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="empty-state">No theses yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

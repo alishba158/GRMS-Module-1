@@ -1,0 +1,74 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Update Supervisor - Admin{% endblock %}
+{% block page_title %}Update Supervisor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-user-edit"></i> Edit Supervisor: {{ supervisor.user.get_full_name }}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" value="{{ supervisor.user.first_name }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" value="{{ supervisor.user.last_name }}">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ supervisor.user.email }}" required>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Employee ID</label>
+                    <input type="text" name="employee_id" class="form-control" value="{{ supervisor.employee_id }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Department</label>
+                    <input type="text" name="department" class="form-control" value="{{ supervisor.department }}">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Designation</label>
+                    <input type="text" name="designation" class="form-control" value="{{ supervisor.designation }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Max Students</label>
+                    <input type="number" name="max_students" class="form-control" value="{{ supervisor.max_students }}">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Availability Status</label>
+                <select name="availability_status" class="form-control">
+                    <option value="Available" {% if supervisor.availability_status == 'Available' %}selected{% endif %}>Available</option>
+                    <option value="Not Available" {% if supervisor.availability_status == 'Not Available' %}selected{% endif %}>Not Available</option>
+                    <option value="On Leave" {% if supervisor.availability_status == 'On Leave' %}selected{% endif %}>On Leave</option>
+                </select>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn-action">
+                    <i class="fas fa-save"></i> Update Supervisor
+                </button>
+                <a href="{% url 'admin_supervisor_list' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

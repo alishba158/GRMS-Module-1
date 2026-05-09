@@ -1,0 +1,67 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Progress Report Detail{% endblock %}
+{% block page_title %}Progress Report Detail{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5>Report Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th>Student</th>
+                        <td>{{ report.student.user.get_full_name }} ({{ report.student.registration_no }})</td>
+                    </tr>
+                    <tr>
+                        <th>Semester</th>
+                        <td>{{ report.semester }}</td>
+                    </tr>
+                    <tr>
+                        <th>Submitted</th>
+                        <td>{{ report.submission_date|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            <span class="badge 
+                                {% if report.status == 'Accepted' %}bg-success
+                                {% elif report.status == 'Rejected' %}bg-danger
+                                {% elif report.status == 'Needs Improvement' %}bg-warning
+                                {% elif report.status == 'Under Review' %}bg-primary
+                                {% else %}bg-info{% endif %}">
+                                {{ report.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Feedback</th>
+                        <td>{{ report.supervisor_feedback|linebreaks|default:"No feedback yet" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Reviewed By</th>
+                        <td>{{ report.reviewed_by.user.get_full_name|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Reviewed At</th>
+                        <td>{{ report.reviewed_at|date:"M d, Y H:i"|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>File</th>
+                        <td>
+                            <a href="{{ report.file.url }}" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                <a href="{% url 'supervisor_progress_list' %}" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block title %}My Synopses - GRMS{% endblock %}
+{% block page_title %}My Synopses{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-file-alt"></i> Synopses List</h5>
+        <a href="{% url 'student_synopsis_create' %}" class="btn-action"><i class="fas fa-plus"></i> Submit New</a>
+    </div>
+    <div class="card-body">
+        <!-- Search & Filter -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-8">
+                <input type="text" name="search" class="form-control" placeholder="Search by title" value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <a href="{% url 'student_synopsis_list' %}" class="btn btn-secondary w-100 mt-1">Reset</a>
+            </div>
+        </form>
+
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for syn in synopses %}
+                <tr>
+                    <td>{{ syn.title }}</td>
+                    <td>{{ syn.submission_date|date:"M d, Y" }}</td>
+                    <td>
+                        <span class="status-badge 
+                            {% if syn.status == 'Approved' %}badge-approved
+                            {% elif syn.status == 'Pending' %}badge-pending
+                            {% else %}badge-rejected{% endif %}">
+                            {{ syn.status }}
+                        </span>
+                    </td>
+                    <td>{{ syn.remarks|default:"—" }}</td>
+                    <td><a href="{% url 'student_synopsis_detail' syn.id %}" class="btn-action btn-sm">View</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="empty-state">No synopses yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

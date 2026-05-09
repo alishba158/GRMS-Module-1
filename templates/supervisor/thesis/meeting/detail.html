@@ -1,0 +1,39 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Meeting Detail - Supervisor{% endblock %}
+{% block page_title %}Meeting Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-calendar-check"></i> Meeting with {{ meeting.student.user.get_full_name }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Student:</strong> {{ meeting.student.user.get_full_name }}</p>
+                <p><strong>Date & Time:</strong> {{ meeting.meeting_date|date:"M d, Y h:i A" }}</p>
+                <p><strong>Mode:</strong> {{ meeting.mode }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Agenda:</strong> {{ meeting.agenda|default:"No agenda provided" }}</p>
+                {% if meeting.summary %}
+                    <p><strong>Summary:</strong> {{ meeting.summary }}</p>
+                {% endif %}
+                {% if meeting.minutes_file %}
+                    <p><strong>Minutes:</strong> <a href="{{ meeting.minutes_file.url }}" target="_blank">Download</a></p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="mt-4">
+            <a href="{% url 'supervisor_meeting_update' meeting.id %}" class="btn-action">
+                <i class="fas fa-edit"></i> Add Summary/Minutes
+            </a>
+            <a href="{% url 'supervisor_meeting_list' %}" class="btn btn-secondary ms-2">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

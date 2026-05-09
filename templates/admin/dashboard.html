@@ -1,0 +1,278 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome Message -->
+<div class="welcome-message" data-aos="fade-up">
+    <h3>Welcome back, Admin!</h3>
+    <p>Manage all research activities from one place</p>
+</div>
+
+<!-- Stats Cards Row 1 (4 cards) - with enhanced Pending Synopsis card -->
+<div class="stats-grid">
+    <div class="stat-card primary" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-icon">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="stat-value counter">{{ total_students }}</div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-trend">
+            <i class="fas fa-arrow-up"></i> Active: {{ active_students }}
+        </div>
+    </div>
+    
+    <div class="stat-card success" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-icon">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="stat-value counter">{{ total_supervisors }}</div>
+        <div class="stat-label">Supervisors</div>
+        <div class="stat-trend">
+            <i class="fas fa-arrow-up"></i> Available: {{ available_supervisors }}
+        </div>
+    </div>
+    
+    <!-- Enhanced Pending Synopsis Card (with breakdown) -->
+    <div class="stat-card warning" data-aos="fade-up" data-aos-delay="300">
+        <div class="stat-icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-value counter">{{ pending_synopses }}</div>
+        <div class="stat-label">Pending Synopsis</div>
+        <div class="stat-trend" style="font-size: 0.8rem; line-height: 1.2;">
+            <i class="fas fa-clock"></i> Submitted: {{ pending_synopses_submitted|default:0 }}<br>
+            <i class="fas fa-spinner"></i> Under Review: {{ pending_synopses_review|default:0 }}
+        </div>
+        <a href="{% url 'admin_synopsis_list' %}?status=Pending" class="stretched-link"></a>
+    </div>
+    
+    <div class="stat-card danger" data-aos="fade-up" data-aos-delay="400">
+        <div class="stat-icon">
+            <i class="fas fa-scroll"></i>
+        </div>
+        <div class="stat-value counter">{{ pending_theses }}</div>
+        <div class="stat-label">Pending Thesis</div>
+        <div class="stat-trend">
+            <i class="fas fa-clock"></i> Urgent
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards Row 2 – Extensions & Notifications (as per your requirement) -->
+<div class="cards-grid mt-3">
+    <!-- Extension Requests Card -->
+    <div class="card border-warning" data-aos="fade-right">
+        <div class="card-header bg-warning text-white">
+            <i class="fas fa-hourglass-half"></i> Extension Requests
+        </div>
+        <div class="card-body">
+            <h3>{{ pending_extensions }} Pending</h3>
+            <p class="text-danger">Urgent: {{ urgent_extensions }} (over 7 days)</p>
+            <a href="{% url 'admin_extension_list' %}" class="btn btn-sm btn-warning">Manage</a>
+        </div>
+    </div>
+
+    <!-- Notifications Card -->
+    <div class="card border-info" data-aos="fade-left">
+        <div class="card-header bg-info text-white">
+            <i class="fas fa-bell"></i> Notifications
+        </div>
+        <div class="card-body">
+            <h3>{{ unread_count }} Unread</h3>
+            <a href="{% url 'all_notifications' %}" class="btn btn-sm btn-info">View All</a>
+        </div>
+    </div>
+</div>
+
+<!-- ===== NEW ROW: Degree Requests Card (Bootstrap) ===== -->
+<div class="row mt-3">
+    <div class="col-md-4">
+        <div class="card text-white h-100" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Degree Requests</h6>
+                        <h2 class="mb-0">{{ pending_degree_requests }}</h2>
+                    </div>
+                    <i class="fas fa-graduation-cap fa-3x opacity-50"></i>
+                </div>
+                <p class="mb-0 mt-2">Pending verification</p>
+                <a href="{% url 'admin_degree_list' %}?status=Pending" class="text-white text-decoration-none stretched-link">Manage →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- First Row: Recent Students & Enhanced Recent Synopsis -->
+<div class="cards-grid mt-4">
+    <!-- Recent Students (unchanged) -->
+    <div class="card" data-aos="fade-right">
+        <div class="card-header">
+            <h5><i class="fas fa-user-graduate gradient-icon"></i> Recent Students</h5>
+            <a href="{% url 'admin_student_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="card-body">
+            {% if recent_students %}
+                {% for student in recent_students %}
+                <div class="list-item hover-bg">
+                    <div class="item-icon pulse">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="item-info">
+                        <h6>{{ student.user.get_full_name }}</h6>
+                        <p>{{ student.registration_no }} • {{ student.program }}</p>
+                    </div>
+                    <span class="status-badge badge-approved">Active</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <p>No students yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Enhanced Recent Synopsis List -->
+    <div class="card" data-aos="fade-left">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5><i class="fas fa-file-alt gradient-icon"></i> Recent Synopsis</h5>
+            <a href="{% url 'admin_synopsis_list' %}" class="btn btn-sm btn-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+                {% for syn in recent_synopses %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ syn.student.user.get_full_name }}</strong><br>
+                            <small>{{ syn.title|truncatechars:30 }}</small>
+                        </div>
+                        <div>
+                            <span class="badge {% if syn.status == 'approved' %}bg-success
+                                              {% elif syn.status == 'rejected' %}bg-danger
+                                              {% elif syn.status == 'changes_requested' %}bg-warning
+                                              {% else %}bg-info{% endif %}">
+                                {{ syn.get_status_display }}
+                            </span>
+                            <a href="{% url 'admin_synopsis_detail' syn.id %}" 
+                               class="btn btn-sm btn-outline-secondary ms-2">View</a>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        {{ syn.submission_date|date:"M d, Y" }} | 
+                        Supervisor: {{ syn.supervisor.user.get_full_name|default:"Not Assigned" }}
+                    </small>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center py-4">
+                    No synopsis submitted yet
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Second Row: Recent Thesis & Recent Extensions (unchanged) -->
+<div class="cards-grid">
+    <!-- Recent Thesis -->
+    <div class="card" data-aos="fade-right" data-aos-delay="100">
+        <div class="card-header">
+            <h5><i class="fas fa-scroll gradient-icon"></i> Recent Thesis</h5>
+            <a href="{% url 'admin_thesis_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="card-body">
+            {% if recent_theses %}
+                {% for thesis in recent_theses %}
+                <div class="list-item hover-bg">
+                    <div class="item-icon rotate">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="item-info">
+                        <h6>{{ thesis.title|truncatechars:25 }}</h6>
+                        <p>{{ thesis.student.user.get_full_name }} • {{ thesis.submission_date|date:"M d" }}</p>
+                    </div>
+                    <span class="status-badge 
+                        {% if thesis.status == 'Approved' %}badge-approved
+                        {% elif thesis.status == 'Submitted' %}badge-pending
+                        {% else %}badge-info{% endif %}">
+                        {{ thesis.status }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-scroll fa-3x mb-3"></i>
+                    <p>No thesis submitted yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Extensions -->
+    <div class="card" data-aos="fade-left" data-aos-delay="200">
+        <div class="card-header">
+            <h5><i class="fas fa-hourglass-half gradient-icon"></i> Recent Extensions</h5>
+            <a href="{% url 'admin_extension_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="card-body">
+            {% if recent_extensions %}
+                {% for ext in recent_extensions %}
+                <div class="list-item hover-bg">
+                    <div class="item-icon shake">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="item-info">
+                        <h6>{{ ext.student.user.get_full_name }}</h6>
+                        <p>{{ ext.requested_duration }} days • {{ ext.request_date|date:"M d" }}</p>
+                    </div>
+                    <span class="status-badge 
+                        {% if ext.status == 'Approved' %}badge-approved
+                        {% elif ext.status == 'Pending' %}badge-pending
+                        {% else %}badge-rejected{% endif %}">
+                        {{ ext.status }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-hourglass fa-3x mb-3"></i>
+                    <p>No extension requests</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions (unchanged) -->
+<div class="card mt-3" data-aos="fade-up">
+    <div class="card-header">
+        <h5><i class="fas fa-bolt gradient-icon"></i> Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="quick-actions-grid">
+            <a href="{% url 'admin_student_create' %}" class="quick-action-btn">
+                <i class="fas fa-user-plus"></i>
+                <span>Add Student</span>
+            </a>
+            <a href="{% url 'admin_supervisor_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #4caf50, #388e3c);">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <span>Add Supervisor</span>
+            </a>
+            <a href="{% url 'admin_synopsis_list' %}?status=pending" class="quick-action-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
+                <i class="fas fa-clock"></i>
+                <span>Pending Synopsis ({{ pending_synopses }})</span>
+            </a>
+            <a href="{% url 'admin_extension_list' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <i class="fas fa-hourglass-half"></i>
+                <span>Extension Requests ({{ pending_extensions }})</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

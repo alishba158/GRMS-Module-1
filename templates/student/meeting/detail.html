@@ -1,0 +1,24 @@
+{% extends 'student/base.html' %}
+{% block title %}Meeting Detail - GRMS{% endblock %}
+{% block page_title %}Meeting Details{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-calendar-check"></i> Meeting with {{ meeting.supervisor.user.get_full_name }}</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Date & Time:</strong> {{ meeting.meeting_date|date:"M d, Y h:i A" }}</p>
+        <p><strong>Mode:</strong> {{ meeting.mode }}</p>
+        {% if meeting.agenda %}
+            <p><strong>Agenda:</strong> {{ meeting.agenda }}</p>
+        {% endif %}
+        {% if meeting.summary %}
+            <p><strong>Summary:</strong> {{ meeting.summary }}</p>
+        {% endif %}
+        {% if meeting.minutes_file %}
+            <p><strong>Minutes:</strong> <a href="{{ meeting.minutes_file.url }}" target="_blank">Download</a></p>
+        {% endif %}
+        <a href="{% url 'student_meeting_list' %}" class="btn-action">Back to List</a>
+    </div>
+</div>
+{% endblock %}

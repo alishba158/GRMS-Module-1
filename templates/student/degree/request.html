@@ -1,0 +1,128 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block title %}Degree Letter Request - GRMS{% endblock %}
+{% block page_title %}Degree Letter{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="fas fa-graduation-cap me-2 fs-4"></i>
+                    <h5 class="mb-0">Degree Letter Request</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Student Info Summary -->
+                    <div class="bg-light p-3 rounded mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong><i class="fas fa-user me-2"></i>Name:</strong> {{ student.user.get_full_name }}</p>
+                                <p><strong><i class="fas fa-id-card me-2"></i>Registration No:</strong> {{ student.registration_no }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong><i class="fas fa-book me-2"></i>Program:</strong> {{ student.program }}</p>
+                                <p><strong><i class="fas fa-calendar-alt me-2"></i>Session:</strong> {{ student.session }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Request Status -->
+                    {% if degree %}
+                        <div class="status-box p-4 mb-4 text-center rounded 
+                            {% if degree.verification_status == 'Issued' %}bg-success text-white
+                            {% elif degree.verification_status == 'Verified' %}bg-info text-white
+                            {% elif degree.verification_status == 'Rejected' %}bg-danger text-white
+                            {% else %}bg-warning text-dark{% endif %}">
+                            <i class="fas {% if degree.verification_status == 'Issued' %}fa-check-circle
+                                          {% elif degree.verification_status == 'Verified' %}fa-check
+                                          {% elif degree.verification_status == 'Rejected' %}fa-times-circle
+                                          {% else %}fa-hourglass-half{% endif %} fa-3x mb-2"></i>
+                            <h4>{{ degree.get_verification_status_display }}</h4>
+                            {% if degree.verification_status == 'Issued' %}
+                                <p>Your degree letter is ready. Click the button below to download.</p>
+                            {% elif degree.verification_status == 'Rejected' %}
+                                <p>Remarks: {{ degree.remarks|default:'No remarks provided' }}</p>
+                            {% elif degree.verification_status == 'Pending' %}
+                                <p>Your request is under review. We'll notify you once it's processed.</p>
+                            {% endif %}
+                        </div>
+
+                        {% if degree.verification_status == 'Issued' and degree.letter_file %}
+                            <div class="text-center mb-3">
+                                <a href="{{ degree.letter_file.url }}" class="btn btn-success btn-lg" download>
+                                    <i class="fas fa-download me-2"></i>Download Degree Letter (PDF)
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <!-- Request Details Table -->
+                        <div class="card mt-3">
+                            <div class="card-header bg-secondary text-white">
+                                <i class="fas fa-info-circle me-2"></i>Request Details
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th style="width: 200px;">Request Date</th>
+                                        <td>{{ degree.request_date|date:"F d, Y H:i" }}</td>
+                                    </tr>
+                                    {% if degree.issue_date %}
+                                    <tr>
+                                        <th>Issue Date</th>
+                                        <td>{{ degree.issue_date|date:"F d, Y" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if degree.verified_by %}
+                                    <tr>
+                                        <th>Verified By</th>
+                                        <td>{{ degree.verified_by.user.get_full_name }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if degree.remarks %}
+                                    <tr>
+                                        <th>Remarks</th>
+                                        <td>{{ degree.remarks|linebreaks }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <!-- No request yet -->
+                        <div class="empty-state text-center py-5">
+                            <i class="fas fa-file-pdf fa-4x text-muted mb-3"></i>
+                            <h5>You haven't requested a degree letter yet.</h5>
+                            <p class="text-muted">Click the button below to request your degree letter. You'll be notified once it's ready.</p>
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i>Request Degree Letter
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3 text-end">
+                        <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

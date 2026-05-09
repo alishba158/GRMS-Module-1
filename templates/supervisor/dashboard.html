@@ -1,0 +1,242 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Supervisor{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome Message -->
+<div class="welcome-message" data-aos="fade-up">
+    <h3>Welcome back, {{ supervisor.user.get_full_name|default:request.user.username }}!</h3>
+    <p>Manage your students' research progress</p>
+</div>
+
+<!-- ===== STATS CARDS (Bootstrap Row) ===== -->
+<div class="row g-4 mb-4">
+    <!-- Students -->
+    <div class="col-md-3">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <h5 class="card-title">Students</h5>
+                <h2 class="display-6">{{ total_students }}</h2>
+                <p class="mb-0">Assigned</p>
+            </div>
+        </div>
+    </div>
+    <!-- Pending Synopsis -->
+    <div class="col-md-3">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body">
+                <h5 class="card-title">Pending Synopsis</h5>
+                <h2 class="display-6">{{ pending_synopses }}</h2>
+                <p class="mb-0">Pending</p>
+            </div>
+        </div>
+    </div>
+    <!-- Pending Thesis -->
+    <div class="col-md-3">
+        <div class="card text-white bg-danger h-100">
+            <div class="card-body">
+                <h5 class="card-title">Pending Thesis</h5>
+                <h2 class="display-6">{{ pending_theses }}</h2>
+                <p class="mb-0">Under Review</p>
+            </div>
+        </div>
+    </div>
+    <!-- Pending Reports -->
+    <div class="col-md-3">
+        <div class="card text-white bg-info h-100">
+            <div class="card-body">
+                <h5 class="card-title">Pending Reports</h5>
+                <h2 class="display-6">{{ pending_reports }}</h2>
+                <a href="{% url 'supervisor_progress_list' %}?status=Submitted" class="text-white">Review →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ROW: Synopsis Pending Review & Recent Activity ===== -->
+<div class="row mt-3">
+    <!-- Synopsis Pending Review Card (left) -->
+    <div class="col-md-6" data-aos="fade-right">
+        <div class="card border-warning h-100">
+            <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clock"></i> Synopsis Pending Review</span>
+                <a href="{% url 'supervisor_synopsis_list' %}?status=submitted" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for syn in recent_synopses %}
+                        {% if syn.status == 'submitted' or syn.status == 'under_review' %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ syn.student.user.get_full_name }}</strong><br>
+                                    <small>{{ syn.title|truncatechars:30 }}</small>
+                                </div>
+                                <a href="{% url 'supervisor_synopsis_review' syn.id %}" class="btn btn-sm btn-outline-warning">Review</a>
+                            </div>
+                        </li>
+                        {% endif %}
+                    {% empty %}
+                    <li class="list-group-item text-center py-4">
+                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i><br>
+                        No pending reviews
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Synopsis Activity Card (right) -->
+    <div class="col-md-6" data-aos="fade-left">
+        <div class="card border-info h-100">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-history"></i> Recent Synopsis Activity</span>
+                <a href="{% url 'supervisor_synopsis_list' %}" class="btn btn-sm btn-light">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for syn in recent_synopses|slice:":5" %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ syn.student.user.get_full_name }}</strong><br>
+                                <small>{{ syn.title|truncatechars:25 }}</small>
+                            </div>
+                            <span class="badge {% if syn.status == 'approved' %}bg-success
+                                              {% elif syn.status == 'rejected' %}bg-danger
+                                              {% elif syn.status == 'changes_requested' %}bg-warning
+                                              {% else %}bg-info{% endif %}">
+                                {{ syn.get_status_display }}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ syn.submission_date|date:"M d, Y" }}</small>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center py-4">
+                        <i class="fas fa-file-alt fa-2x mb-2"></i><br>
+                        No synopsis activity
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ROW: Extension Requests + Upcoming Meetings ===== -->
+<div class="row mt-3">
+    <!-- Extension Requests Card (UPDATED) -->
+    <div class="col-md-6" data-aos="fade-right">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-uppercase">Extension Requests</h6>
+                        <h2 class="mb-0">{{ pending_extensions|default:0 }}</h2>
+                        <p class="mb-0 mt-2">Awaiting your review</p>
+                    </div>
+                    <i class="fas fa-hourglass-start fa-3x opacity-50"></i>
+                </div>
+                <hr class="bg-white opacity-25">
+                <a href="{% url 'supervisor_extension_list' %}?status=Pending" class="text-white text-decoration-none stretched-link">Review All <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Meetings Card -->
+    <div class="col-md-6" data-aos="fade-left">
+        <div class="card border-success h-100">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-calendar-check"></i> Upcoming Meetings
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for meeting in upcoming_meetings|slice:":5" %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ meeting.student.user.get_full_name }}</strong>
+                            <br><small>{{ meeting.meeting_date|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <span class="badge bg-info">{{ meeting.mode }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center py-4">
+                        <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
+                        No upcoming meetings
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-footer text-end">
+                <a href="{% url 'supervisor_meeting_list' %}" class="btn btn-sm btn-success">View All</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ROW: Recent Thesis ===== -->
+<div class="row mt-3">
+    <div class="col-md-12">
+        <div class="card" data-aos="fade-up">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-scroll gradient-icon"></i> Recent Thesis</h5>
+                <a href="{% url 'supervisor_thesis_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="card-body">
+                {% if recent_theses %}
+                    {% for thesis in recent_theses|slice:":5" %}
+                    <div class="list-item hover-bg">
+                        <div class="item-icon rotate"><i class="fas fa-book"></i></div>
+                        <div class="item-info">
+                            <h6>{{ thesis.title|truncatechars:25 }}</h6>
+                            <p>{{ thesis.student.user.get_full_name }} • {{ thesis.submission_date|date:"M d" }}</p>
+                        </div>
+                        <span class="status-badge 
+                            {% if thesis.status == 'Approved' %}badge-approved
+                            {% elif thesis.status == 'Submitted' %}badge-pending
+                            {% else %}badge-info{% endif %}">
+                            {{ thesis.status }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-scroll fa-3x mb-3"></i>
+                        <p>No thesis yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-3" data-aos="fade-up">
+    <div class="card-header">
+        <h5><i class="fas fa-bolt gradient-icon"></i> Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="quick-actions-grid">
+            <a href="{% url 'supervisor_meeting_create' %}" class="quick-action-btn">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Schedule Meeting</span>
+            </a>
+            <a href="{% url 'supervisor_synopsis_list' %}?status=submitted" class="quick-action-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
+                <i class="fas fa-clock"></i>
+                <span>Pending Synopsis ({{ pending_synopses }})</span>
+            </a>
+            <a href="{% url 'supervisor_extension_list' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                <i class="fas fa-hourglass-half"></i>
+                <span>Extension Requests ({{ pending_extensions }})</span>
+            </a>
+            <a href="{% url 'supervisor_thesis_list' %}?status=submitted" class="quick-action-btn" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                <i class="fas fa-scroll"></i>
+                <span>Pending Thesis ({{ pending_theses }})</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

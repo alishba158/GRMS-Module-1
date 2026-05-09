@@ -1,0 +1,128 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Theses - Supervisor{% endblock %}
+{% block page_title %}Theses{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-scroll"></i> All Theses</h5>
+    </div>
+    <div class="card-body">
+        <!-- Filter Bar -->
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-5">
+                <input type="text" name="search" class="form-control" placeholder="Search by title or student name" value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    {% for code, label in status_choices %}
+                        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'supervisor_thesis_list' %}" class="btn btn-secondary w-100">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Title</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for thesis in theses %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                                <div>
+                                    <strong>{{ thesis.student.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ thesis.student.registration_no }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ thesis.title|truncatechars:50 }}</td>
+                        <td>{{ thesis.submission_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="status-badge 
+                                {% if thesis.status == 'Approved' %}badge-approved
+                                {% elif thesis.status == 'Submitted' %}badge-pending
+                                {% else %}badge-info{% endif %}">
+                                {{ thesis.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'supervisor_thesis_detail' thesis.id %}" class="btn-action btn-sm" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if thesis.status == 'Submitted' %}
+                            <a href="#" class="btn-action btn-sm" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ thesis.id }}" title="Update Status">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Update Status Modal -->
+                    <div class="modal fade" id="updateStatusModal{{ thesis.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="post" action="{% url 'supervisor_thesis_update_status' thesis.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Update Thesis Status</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>{{ thesis.title }}</strong></p>
+                                        <div class="mb-3">
+                                            <label class="form-label">New Status</label>
+                                            <select name="status" class="form-control" required>
+                                                <option value="">Select status</option>
+                                                <option value="Under Review">Under Review</option>
+                                                <option value="Minor Changes Required">Minor Changes Required</option>
+                                                <option value="Major Changes Required">Major Changes Required</option>
+                                                <option value="Approved">Approved</option>
+                                                <option value="Rejected">Rejected</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Remarks (optional)</label>
+                                            <textarea name="remarks" class="form-control" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Update</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="fas fa-scroll fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No theses found.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

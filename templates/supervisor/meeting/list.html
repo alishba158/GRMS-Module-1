@@ -1,0 +1,45 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Meetings - Supervisor{% endblock %}
+{% block page_title %}Meetings{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-calendar-check"></i> All Meetings</h5>
+        <a href="{% url 'supervisor_meeting_create' %}" class="btn-action">
+            <i class="fas fa-plus"></i> Schedule Meeting
+        </a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Date & Time</th>
+                    <th>Mode</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for meeting in meetings %}
+                <tr>
+                    <td>{{ meeting.student.user.get_full_name }}</td>
+                    <td>{{ meeting.meeting_date|date:"M d, Y h:i A" }}</td>
+                    <td>{{ meeting.mode }}</td>
+                    <td>
+                        <a href="{% url 'supervisor_meeting_detail' meeting.id %}" class="btn-action" style="padding: 0.2rem 0.8rem;">View</a>
+                        <a href="{% url 'supervisor_meeting_update' meeting.id %}" class="btn-action" style="padding: 0.2rem 0.8rem; background: #3498db;">Update</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="empty-state">No meetings scheduled.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

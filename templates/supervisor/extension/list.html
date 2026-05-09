@@ -1,0 +1,92 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Extension Requests - Supervisor{% endblock %}
+{% block page_title %}Extension Requests{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-hourglass-half me-2"></i>Extension Requests from Your Students</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" name="search" class="form-control" placeholder="Search student name..." value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="status" class="form-select">
+                                    <option value="">All Statuses</option>
+                                    <option value="Pending" {% if request.GET.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="Approved" {% if request.GET.status == 'Approved' %}selected{% endif %}>Approved</option>
+                                    <option value="Rejected" {% if request.GET.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{% url 'supervisor_extension_list' %}" class="btn btn-outline-secondary w-100">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    {% if extensions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Request Date</th>
+                                        <th>Duration</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ext in extensions %}
+                                    <tr>
+                                        <td>{{ ext.student.user.get_full_name }}<br><small class="text-muted">{{ ext.student.registration_no }}</small></td>
+                                        <td>{{ ext.request_date|date:"M d, Y" }}</td>
+                                        <td>{{ ext.requested_duration }} days</td>
+                                        <td>{{ ext.reason|truncatechars:30 }}</td>
+                                        <td>
+                                            <span class="badge {% if ext.status == 'Approved' %}bg-success
+                                                              {% elif ext.status == 'Rejected' %}bg-danger
+                                                              {% else %}bg-warning{% endif %}">
+                                                {{ ext.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'supervisor_extension_detail' ext.id %}" class="btn btn-sm btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if ext.status == 'Pending' %}
+                                                <a href="{% url 'supervisor_extension_review' ext.id %}" class="btn btn-sm btn-warning" title="Review">
+                                                    <i class="fas fa-check-circle"></i> Review
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5>No Extension Requests</h5>
+                            <p class="text-muted">There are no extension requests to display.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

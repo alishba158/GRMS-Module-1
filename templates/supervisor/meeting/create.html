@@ -1,0 +1,62 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Schedule Meeting - Supervisor{% endblock %}
+{% block page_title %}Schedule New Meeting{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-calendar-plus"></i> Meeting Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label">Student <span class="text-danger">*</span></label>
+                <select name="student" class="form-control" required>
+                    <option value="">Select Student</option>
+                    {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.user.get_full_name }} ({{ student.registration_no }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Time <span class="text-danger">*</span></label>
+                    <input type="time" name="time" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Mode <span class="text-danger">*</span></label>
+                <select name="mode" class="form-control" required>
+                    <option value="">Select Mode</option>
+                    <option value="Online">Online</option>
+                    <option value="In-Person">In-Person</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Agenda</label>
+                <textarea name="agenda" class="form-control" rows="3" placeholder="Meeting agenda..."></textarea>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn-action">
+                    <i class="fas fa-calendar-check"></i> Schedule Meeting
+                </button>
+                <a href="{% url 'supervisor_meeting_list' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

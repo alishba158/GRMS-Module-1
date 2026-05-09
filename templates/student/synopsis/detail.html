@@ -1,0 +1,19 @@
+{% extends 'student/base.html' %}
+{% block title %}Synopsis Detail - GRMS{% endblock %}
+{% block page_title %}Synopsis Details{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-file-alt"></i> {{ synopsis.title }}</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Submitted:</strong> {{ synopsis.submission_date|date:"M d, Y" }}</p>
+        <p><strong>Status:</strong> <span class="status-badge status-{{ synopsis.status|lower }}">{{ synopsis.status }}</span></p>
+        {% if synopsis.remarks %}
+            <p><strong>Remarks:</strong> {{ synopsis.remarks }}</p>
+        {% endif %}
+        <p><strong>File:</strong> <a href="{{ synopsis.file.url }}" target="_blank">Download</a></p>
+        <a href="{% url 'student_synopsis_list' %}" class="btn-action">Back to List</a>
+    </div>
+</div>
+{% endblock %}

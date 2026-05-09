@@ -1,0 +1,49 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Student Detail - Admin{% endblock %}
+{% block page_title %}Student Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-user-graduate"></i> {{ student.user.get_full_name }}</h5>
+        <div>
+            <a href="{% url 'admin_student_update' student.id %}" class="btn-action" style="background: #3498db;">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'admin_student_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Registration No:</th><td>{{ student.registration_no }}</td></tr>
+                    <tr><th>Full Name:</th><td>{{ student.user.get_full_name }}</td></tr>
+                    <tr><th>Email:</th><td>{{ student.user.email }}</td></tr>
+                    <tr><th>Department:</th><td>{{ student.department }}</td></tr>
+                    <tr><th>Program:</th><td>{{ student.program }}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Session:</th><td>{{ student.session }}</td></tr>
+                    <tr><th>Admission Date:</th><td>{{ student.admission_date|date:"M d, Y" }}</td></tr>
+                    <tr><th>Enrollment Status:</th><td>
+                        <span class="badge-custom 
+                            {% if student.enrollment_status == 'Active' %}badge-approved
+                            {% elif student.enrollment_status == 'Inactive' %}badge-pending
+                            {% else %}badge-rejected{% endif %}">
+                            {{ student.enrollment_status }}
+                        </span>
+                    </td></tr>
+                    <tr><th>Supervisor:</th><td>{{ student.supervisor.user.get_full_name|default:"Not Assigned" }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

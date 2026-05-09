@@ -1,0 +1,33 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Delete Student - Admin{% endblock %}
+{% block page_title %}Delete Student{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-trash-alt"></i> Confirm Delete</h5>
+    </div>
+    <div class="card-body text-center">
+        <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+        <h4>Are you sure you want to delete <strong>{{ student.user.get_full_name }}</strong>?</h4>
+        <p class="text-muted">This action cannot be undone.</p>
+        <div class="alert alert-warning text-start">
+            <strong>Student Details:</strong><br>
+            Registration No: {{ student.registration_no }}<br>
+            Program: {{ student.program }}<br>
+            Status: {{ student.enrollment_status }}
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-action" style="background: #e74c3c;">
+                <i class="fas fa-trash"></i> Yes, Delete
+            </button>
+            <a href="{% url 'admin_student_list' %}" class="btn btn-secondary ms-2">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>
+{% endblock %}

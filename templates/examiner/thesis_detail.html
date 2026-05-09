@@ -1,0 +1,97 @@
+{% extends 'examiner/base.html' %}
+{% load static %}
+
+{% block title %}Thesis Details{% endblock %}
+{% block page_title %}Thesis Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>{{ thesis.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Student:</strong> {{ thesis.student.user.get_full_name }} ({{ thesis.student.registration_no }})</p>
+                    <p><strong>Submitted:</strong> {{ thesis.submission_date|date:"M d, Y H:i" }}</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge {% if thesis.status == 'Submitted' %}bg-info
+                                          {% elif thesis.status == 'Under Review' %}bg-warning
+                                          {% elif thesis.status == 'Accepted' %}bg-success
+                                          {% else %}bg-danger{% endif %}">
+                            {{ thesis.status }}
+                        </span>
+                    </p>
+                    <p><strong>Thesis File:</strong> 
+                        <a href="{{ thesis.file.url }}" target="_blank" class="btn btn-sm btn-primary">
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+            {% if not evaluation.submitted %}
+            <div class="card mt-3 border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h5>Submit Your Evaluation</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% url 'examiner_evaluation_submit' evaluation.id %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="marks">Marks (0-100)</label>
+                                <input type="number" class="form-control" id="marks" name="marks" min="0" max="100" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="result">Result</label>
+                                <select class="form-control" id="result" name="result" required>
+                                    <option value="Pass">Pass</option>
+                                    <option value="Fail">Fail</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="recommendation">Recommendation</label>
+                                <select class="form-control" id="recommendation" name="recommendation" required>
+                                    <option value="">Select</option>
+                                    <option value="Accept">Accept</option>
+                                    <option value="Minor Changes">Minor Changes</option>
+                                    <option value="Major Changes">Major Changes</option>
+                                    <option value="Reject">Reject</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="report_file">Evaluation Report (PDF)</label>
+                                <input type="file" class="form-control" id="report_file" name="report_file" accept=".pdf" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comments">Comments</label>
+                            <textarea class="form-control" id="comments" name="comments" rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Submit Evaluation</button>
+                        <a href="{% url 'examiner_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mt-3 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5>Evaluation Submitted</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Marks:</strong> {{ evaluation.marks }}</p>
+                    <p><strong>Result:</strong> {{ evaluation.result }}</p>
+                    <p><strong>Recommendation:</strong> {{ evaluation.recommendation }}</p>
+                    <p><strong>Comments:</strong> {{ evaluation.comments|linebreaks }}</p>
+                    <p><strong>Report:</strong> <a href="{{ evaluation.report_file.url }}" target="_blank">Download</a></p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

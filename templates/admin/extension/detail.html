@@ -1,0 +1,64 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Extension Detail - Admin{% endblock %}
+{% block page_title %}Extension Request Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5><i class="fas fa-hourglass-half"></i> Extension Request</h5>
+        <div>
+            <form method="post" action="{% url 'admin_extension_approve' extension.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-action" style="background: #27ae60;">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+            </form>
+            <form method="post" action="{% url 'admin_extension_reject' extension.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-action" style="background: #e74c3c;">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+            </form>
+            <a href="{% url 'admin_extension_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Student:</th><td>{{ extension.student.user.get_full_name }}</td></tr>
+                    <tr><th>Registration No:</th><td>{{ extension.student.registration_no }}</td></tr>
+                    <tr><th>Program:</th><td>{{ extension.student.program }}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table">
+                    <tr><th>Request Date:</th><td>{{ extension.request_date|date:"M d, Y" }}</td></tr>
+                    <tr><th>Requested Duration:</th><td>{{ extension.requested_duration }} days</td></tr>
+                    <tr><th>Status:</th><td>
+                        <span class="badge-custom 
+                            {% if extension.status == 'Approved' %}badge-approved
+                            {% elif extension.status == 'Pending' %}badge-pending
+                            {% else %}badge-rejected{% endif %}">
+                            {{ extension.status }}
+                        </span>
+                    </td></tr>
+                </table>
+            </div>
+        </div>
+        <hr>
+        <h6>Reason:</h6>
+        <p>{{ extension.reason }}</p>
+        {% if extension.supporting_document %}
+        <hr>
+        <a href="{{ extension.supporting_document.url }}" target="_blank" class="btn-action">
+            <i class="fas fa-download"></i> Download Document
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

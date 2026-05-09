@@ -1,0 +1,84 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Extension Details - Supervisor{% endblock %}
+{% block page_title %}Extension Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Extension Request from {{ extension.student.user.get_full_name }}</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 200px;">Student</th>
+                            <td>{{ extension.student.user.get_full_name }} ({{ extension.student.registration_no }})</td>
+                        </tr>
+                        <tr>
+                            <th>Request Date</th>
+                            <td>{{ extension.request_date|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Reason</th>
+                            <td>{{ extension.reason|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <th>Requested Duration</th>
+                            <td>{{ extension.requested_duration }} days</td>
+                        </tr>
+                        <tr>
+                            <th>Supporting Document</th>
+                            <td>
+                                {% if extension.supporting_document %}
+                                    <a href="{{ extension.supporting_document.url }}" class="btn btn-sm btn-primary" target="_blank">
+                                        <i class="fas fa-download"></i> Download PDF
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">No document uploaded</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                <span class="badge {% if extension.status == 'Approved' %}bg-success
+                                                  {% elif extension.status == 'Rejected' %}bg-danger
+                                                  {% else %}bg-warning{% endif %} fs-6 p-2">
+                                    {{ extension.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% if extension.approval_date %}
+                        <tr>
+                            <th>Approval Date</th>
+                            <td>{{ extension.approval_date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if extension.remarks %}
+                        <tr>
+                            <th>Remarks</th>
+                            <td>{{ extension.remarks|linebreaks }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'supervisor_extension_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                        {% if extension.status == 'Pending' %}
+                            <a href="{% url 'supervisor_extension_review' extension.id %}" class="btn btn-warning">
+                                <i class="fas fa-check-circle"></i> Review Request
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

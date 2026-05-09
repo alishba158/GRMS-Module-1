@@ -1,0 +1,37 @@
+{% extends 'supervisor/base.html' %}
+{% load static %}
+
+{% block title %}Notifications - Supervisor{% endblock %}
+{% block page_title %}All Notifications{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-bell"></i> Notifications</h5>
+        <a href="{% url 'mark_all_read' %}" class="btn-action">Mark all as read</a>
+    </div>
+    <div class="card-body">
+        {% if notifications %}
+            <div class="list-group">
+                {% for notif in notifications %}
+                <div class="list-group-item list-group-item-action {% if not notif.is_read %}list-group-item-info{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ notif.message }}</h6>
+                        <small>{{ notif.created_at|timesince }} ago</small>
+                    </div>
+                    <p class="mb-1">Type: {{ notif.notification_type }}</p>
+                    {% if notif.link %}
+                        <a href="{{ notif.link }}" class="btn-action btn-sm">View</a>
+                    {% endif %}
+                    {% if not notif.is_read %}
+                        <span class="badge badge-pending">New</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No notifications.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

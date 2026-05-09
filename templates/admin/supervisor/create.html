@@ -1,0 +1,85 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Create Supervisor - Admin{% endblock %}
+{% block page_title %}Add New Supervisor{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-user-plus"></i> Supervisor Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" name="username" class="form-control" required>
+                    <small class="text-muted">Username must be unique</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Employee ID</label>
+                    <input type="text" name="employee_id" class="form-control">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Department</label>
+                    <input type="text" name="department" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Designation</label>
+                    <input type="text" name="designation" class="form-control">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Max Students</label>
+                    <input type="number" name="max_students" class="form-control" value="5">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Availability Status</label>
+                <select name="availability_status" class="form-control">
+                    <option value="Available">Available</option>
+                    <option value="Not Available">Not Available</option>
+                    <option value="On Leave">On Leave</option>
+                </select>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn-action">
+                    <i class="fas fa-save"></i> Create Supervisor
+                </button>
+                <a href="{% url 'admin_supervisor_list' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
