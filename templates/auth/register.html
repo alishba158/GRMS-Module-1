@@ -73,14 +73,14 @@
             </div>
             
             <!-- Username Field -->
-<div class="input-group">
-    <i class="fas fa-user-tag"></i>
-    <input type="text" name="username" placeholder="Username" required>
-</div>
-<div class="field-guidance">
-    <i class="fas fa-info-circle"></i>
-    Choose a unique username (letters, numbers, and underscore only)
-</div>
+            <div class="input-group">
+                <i class="fas fa-user-tag"></i>
+                <input type="text" name="username" placeholder="Username" required>
+            </div>
+            <div class="field-guidance">
+                <i class="fas fa-info-circle"></i>
+                Choose a unique username (letters, numbers, and underscore only)
+            </div>
             
             <!-- Email Field -->
             <div class="input-group">
@@ -92,18 +92,19 @@
                 Use your university email or personal email
             </div>
             
-            <!-- Role Field -->
+            <!-- Role Field - Examiner Option Added -->
             <div class="input-group">
                 <i class="fas fa-user-graduate"></i>
                 <select name="role" required>
                     <option value="" disabled selected>Select Role</option>
                     <option value="Student">Student</option>
                     <option value="Supervisor">Supervisor</option>
+                    <option value="Examiner">Examiner</option>
                 </select>
             </div>
             <div class="field-guidance">
                 <i class="fas fa-info-circle"></i>
-                Select your role - Student for researchers, Supervisor for faculty members
+                Select your role - Student for researchers, Supervisor for faculty members, Examiner for thesis evaluation
             </div>
             
             <!-- Password Field -->

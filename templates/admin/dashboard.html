@@ -5,274 +5,334 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
+
+<style>
+    /* Professional Card Styles */
+    .stat-card-modern {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid;
+        cursor: pointer;
+    }
+    
+    .stat-card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+    
+    /* Professional View All Button */
+    .view-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+        padding: 6px 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #2e7d32;
+        background: #e8f5e9;
+        text-decoration: none;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+    }
+    
+    .view-link i {
+        font-size: 0.65rem;
+        transition: transform 0.2s ease;
+    }
+    
+    .view-link:hover {
+        background: #2e7d32;
+        color: white;
+    }
+    
+    .view-link:hover i {
+        transform: translateX(3px);
+    }
+    
+    /* Quick Action Buttons */
+    .quick-action-btn {
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: white;
+        padding: 12px;
+        border-radius: 12px;
+        text-align: center;
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: block;
+        font-weight: 500;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(46,125,50,0.3);
+    }
+    
+    /* Grid Layouts */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .stats-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+    
+    /* Loading indicator */
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #2e7d32;
+        font-size: 0.85rem;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .stats-grid, .stats-grid-2, .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <!-- Welcome Message -->
 <div class="welcome-message" data-aos="fade-up">
     <h3>Welcome back, Admin!</h3>
     <p>Manage all research activities from one place</p>
 </div>
 
-<!-- Stats Cards Row 1 (4 cards) - with enhanced Pending Synopsis card -->
+<!-- Stats Row 1 -->
 <div class="stats-grid">
-    <div class="stat-card primary" data-aos="fade-up" data-aos-delay="100">
-        <div class="stat-icon">
-            <i class="fas fa-user-graduate"></i>
-        </div>
-        <div class="stat-value counter">{{ total_students }}</div>
-        <div class="stat-label">Total Students</div>
-        <div class="stat-trend">
-            <i class="fas fa-arrow-up"></i> Active: {{ active_students }}
-        </div>
+    <div class="stat-card-modern" style="border-left-color: #2e7d32;">
+        <div style="font-size: 2rem; font-weight: 700; color: #1b5e20;">{{ total_students }}</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #555;">Total Students</div>
+        <small style="font-size: 0.7rem; color: #777;">Active: {{ active_students }}</small>
     </div>
     
-    <div class="stat-card success" data-aos="fade-up" data-aos-delay="200">
-        <div class="stat-icon">
-            <i class="fas fa-chalkboard-teacher"></i>
-        </div>
-        <div class="stat-value counter">{{ total_supervisors }}</div>
-        <div class="stat-label">Supervisors</div>
-        <div class="stat-trend">
-            <i class="fas fa-arrow-up"></i> Available: {{ available_supervisors }}
-        </div>
+    <div class="stat-card-modern" style="border-left-color: #4caf50;">
+        <div style="font-size: 2rem; font-weight: 700; color: #1b5e20;">{{ total_supervisors }}</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #555;">Supervisors</div>
+        <small style="font-size: 0.7rem; color: #777;">Available: {{ available_supervisors }}</small>
     </div>
     
-    <!-- Enhanced Pending Synopsis Card (with breakdown) -->
-    <div class="stat-card warning" data-aos="fade-up" data-aos-delay="300">
-        <div class="stat-icon">
-            <i class="fas fa-file-alt"></i>
-        </div>
-        <div class="stat-value counter">{{ pending_synopses }}</div>
-        <div class="stat-label">Pending Synopsis</div>
-        <div class="stat-trend" style="font-size: 0.8rem; line-height: 1.2;">
-            <i class="fas fa-clock"></i> Submitted: {{ pending_synopses_submitted|default:0 }}<br>
-            <i class="fas fa-spinner"></i> Under Review: {{ pending_synopses_review|default:0 }}
-        </div>
-        <a href="{% url 'admin_synopsis_list' %}?status=Pending" class="stretched-link"></a>
+    <div class="stat-card-modern" style="border-left-color: #e67e22;">
+        <div style="font-size: 2rem; font-weight: 700; color: #1b5e20;">{{ pending_synopses }}</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #555;">Pending Synopsis</div>
+        <small style="font-size: 0.7rem; color: #777;">Submitted: {{ pending_synopses_submitted|default:0 }} | Under Review: {{ pending_synopses_review|default:0 }}</small>
+        <a href="{% url 'admin_synopsis_list' %}?status=Pending" class="view-link">View All <i class="fas fa-arrow-right"></i></a>
     </div>
     
-    <div class="stat-card danger" data-aos="fade-up" data-aos-delay="400">
-        <div class="stat-icon">
-            <i class="fas fa-scroll"></i>
-        </div>
-        <div class="stat-value counter">{{ pending_theses }}</div>
-        <div class="stat-label">Pending Thesis</div>
-        <div class="stat-trend">
-            <i class="fas fa-clock"></i> Urgent
+    <div class="stat-card-modern" style="border-left-color: #e74c3c;">
+        <div style="font-size: 2rem; font-weight: 700; color: #1b5e20;">{{ pending_theses }}</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #555;">Pending Thesis</div>
+        <a href="{% url 'admin_thesis_list' %}?status=Submitted" class="view-link">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<!-- Stats Row 2 -->
+<div class="stats-grid-2">
+    <div class="stat-card-modern" style="border-left-color: #3498db;">
+        <div style="font-size: 2rem; font-weight: 700; color: #1b5e20;">{{ pending_extensions }}</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #555;">Extension Requests</div>
+        <small style="font-size: 0.7rem; color: #777;">Urgent: {{ urgent_extensions }}</small>
+        <a href="{% url 'admin_extension_list' %}?status=Pending" class="view-link">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    
+    <div class="stat-card-modern" style="border-left-color: #9b59b6;">
+        <div style="font-size: 2rem; font-weight: 700; color: #1b5e20;">{{ pending_degree_requests }}</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #555;">Degree Requests</div>
+        <small style="font-size: 0.7rem; color: #777;">Pending verification</small>
+        <a href="{% url 'admin_degree_list' %}?status=Pending" class="view-link">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    
+    <div class="stat-card-modern" style="border-left-color: #3498db;">
+        <div style="font-size: 2rem; font-weight: 700; color: #1b5e20;">{{ unread_count }}</div>
+        <div style="font-size: 0.85rem; font-weight: 600; color: #555;">Notifications</div>
+        <a href="{% url 'all_notifications' %}" class="view-link">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="quick-actions-grid">
+            <a href="{% url 'admin_student_create' %}" class="quick-action-btn">➕ Add Student</a>
+            <a href="{% url 'admin_supervisor_create' %}" class="quick-action-btn">👤 Add Supervisor</a>
+            <a href="{% url 'admin_synopsis_list' %}?status=Pending" class="quick-action-btn">📄 Pending Synopsis ({{ pending_synopses }})</a>
+            <a href="{% url 'admin_extension_list' %}?status=Pending" class="quick-action-btn">⏰ Extensions ({{ pending_extensions }})</a>
         </div>
     </div>
 </div>
 
-<!-- Stats Cards Row 2 – Extensions & Notifications (as per your requirement) -->
-<div class="cards-grid mt-3">
-    <!-- Extension Requests Card -->
-    <div class="card border-warning" data-aos="fade-right">
-        <div class="card-header bg-warning text-white">
-            <i class="fas fa-hourglass-half"></i> Extension Requests
-        </div>
-        <div class="card-body">
-            <h3>{{ pending_extensions }} Pending</h3>
-            <p class="text-danger">Urgent: {{ urgent_extensions }} (over 7 days)</p>
-            <a href="{% url 'admin_extension_list' %}" class="btn btn-sm btn-warning">Manage</a>
-        </div>
+<!-- Department Filter Section (AJAX - No Page Reload) -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="fas fa-filter"></i> Filter Students by Department
     </div>
-
-    <!-- Notifications Card -->
-    <div class="card border-info" data-aos="fade-left">
-        <div class="card-header bg-info text-white">
-            <i class="fas fa-bell"></i> Notifications
-        </div>
-        <div class="card-body">
-            <h3>{{ unread_count }} Unread</h3>
-            <a href="{% url 'all_notifications' %}" class="btn btn-sm btn-info">View All</a>
-        </div>
-    </div>
-</div>
-
-<!-- ===== NEW ROW: Degree Requests Card (Bootstrap) ===== -->
-<div class="row mt-3">
-    <div class="col-md-4">
-        <div class="card text-white h-100" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase">Degree Requests</h6>
-                        <h2 class="mb-0">{{ pending_degree_requests }}</h2>
-                    </div>
-                    <i class="fas fa-graduation-cap fa-3x opacity-50"></i>
-                </div>
-                <p class="mb-0 mt-2">Pending verification</p>
-                <a href="{% url 'admin_degree_list' %}?status=Pending" class="text-white text-decoration-none stretched-link">Manage →</a>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <select id="deptFilter" class="form-control">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button id="resetFilter" class="btn btn-secondary">Reset</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- First Row: Recent Students & Enhanced Recent Synopsis -->
-<div class="cards-grid mt-4">
-    <!-- Recent Students (unchanged) -->
-    <div class="card" data-aos="fade-right">
-        <div class="card-header">
-            <h5><i class="fas fa-user-graduate gradient-icon"></i> Recent Students</h5>
-            <a href="{% url 'admin_student_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+<!-- Students List by Department (Updates via AJAX - No Page Reload) -->
+<div id="studentsListContainer">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <span><i class="fas fa-users"></i> Students 
+            {% if selected_dept %} - {{ selected_dept }} Department{% endif %}
+            </span>
+            <span id="studentCount" style="font-size: 0.7rem;">Total: {{ filtered_students|length }} students</span>
         </div>
         <div class="card-body">
-            {% if recent_students %}
-                {% for student in recent_students %}
-                <div class="list-item hover-bg">
-                    <div class="item-icon pulse">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="item-info">
-                        <h6>{{ student.user.get_full_name }}</h6>
-                        <p>{{ student.registration_no }} • {{ student.program }}</p>
-                    </div>
-                    <span class="status-badge badge-approved">Active</span>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-users fa-3x mb-3"></i>
-                    <p>No students yet</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Enhanced Recent Synopsis List -->
-    <div class="card" data-aos="fade-left">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5><i class="fas fa-file-alt gradient-icon"></i> Recent Synopsis</h5>
-            <a href="{% url 'admin_synopsis_list' %}" class="btn btn-sm btn-primary">View All</a>
-        </div>
-        <div class="card-body p-0">
-            <ul class="list-group list-group-flush">
-                {% for syn in recent_synopses %}
-                <li class="list-group-item">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ syn.student.user.get_full_name }}</strong><br>
-                            <small>{{ syn.title|truncatechars:30 }}</small>
-                        </div>
-                        <div>
-                            <span class="badge {% if syn.status == 'approved' %}bg-success
-                                              {% elif syn.status == 'rejected' %}bg-danger
-                                              {% elif syn.status == 'changes_requested' %}bg-warning
-                                              {% else %}bg-info{% endif %}">
-                                {{ syn.get_status_display }}
-                            </span>
-                            <a href="{% url 'admin_synopsis_detail' syn.id %}" 
-                               class="btn btn-sm btn-outline-secondary ms-2">View</a>
-                        </div>
-                    </div>
-                    <small class="text-muted">
-                        {{ syn.submission_date|date:"M d, Y" }} | 
-                        Supervisor: {{ syn.supervisor.user.get_full_name|default:"Not Assigned" }}
-                    </small>
-                </li>
-                {% empty %}
-                <li class="list-group-item text-center py-4">
-                    No synopsis submitted yet
-                </li>
-                {% endfor %}
-            </ul>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Reg No</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Program</th>
+                            <th>Session</th>
+                            <th>Supervisor</th>
+                            <th>Status</th>
+                        </a>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        {% for student in filtered_students %}
+                        <tr>
+                            <td>{{ student.registration_no }}</a>
+                            <td>{{ student.user.get_full_name }}</a>
+                            <td>{{ student.department }}</a>
+                            <td>{{ student.program }}</a>
+                            <td>{{ student.session }}</a>
+                            <td>{{ student.supervisor.user.get_full_name|default:"Not Assigned" }}</a>
+                            <td>
+                                <span class="badge {% if student.enrollment_status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ student.enrollment_status }}
+                                </span>
+                            </a>
+                        </a>
+                        {% empty %}
+                        <tr id="emptyRow">
+                            <td colspan="7" class="text-center">No students found in this department.</a>
+                        </a>
+                        {% endfor %}
+                    </tbody>
+                </a>表
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Second Row: Recent Thesis & Recent Extensions (unchanged) -->
-<div class="cards-grid">
-    <!-- Recent Thesis -->
-    <div class="card" data-aos="fade-right" data-aos-delay="100">
-        <div class="card-header">
-            <h5><i class="fas fa-scroll gradient-icon"></i> Recent Thesis</h5>
-            <a href="{% url 'admin_thesis_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="card-body">
-            {% if recent_theses %}
-                {% for thesis in recent_theses %}
-                <div class="list-item hover-bg">
-                    <div class="item-icon rotate">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <div class="item-info">
-                        <h6>{{ thesis.title|truncatechars:25 }}</h6>
-                        <p>{{ thesis.student.user.get_full_name }} • {{ thesis.submission_date|date:"M d" }}</p>
-                    </div>
-                    <span class="status-badge 
-                        {% if thesis.status == 'Approved' %}badge-approved
-                        {% elif thesis.status == 'Submitted' %}badge-pending
-                        {% else %}badge-info{% endif %}">
-                        {{ thesis.status }}
-                    </span>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-scroll fa-3x mb-3"></i>
-                    <p>No thesis submitted yet</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
+<script>
+// AJAX Filter functionality - Only updates students table, NO PAGE RELOAD
+document.getElementById('deptFilter').addEventListener('change', function() {
+    var department = this.value;
+    filterStudents(department);
+});
 
-    <!-- Recent Extensions -->
-    <div class="card" data-aos="fade-left" data-aos-delay="200">
-        <div class="card-header">
-            <h5><i class="fas fa-hourglass-half gradient-icon"></i> Recent Extensions</h5>
-            <a href="{% url 'admin_extension_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="card-body">
-            {% if recent_extensions %}
-                {% for ext in recent_extensions %}
-                <div class="list-item hover-bg">
-                    <div class="item-icon shake">
-                        <i class="fas fa-hourglass-half"></i>
-                    </div>
-                    <div class="item-info">
-                        <h6>{{ ext.student.user.get_full_name }}</h6>
-                        <p>{{ ext.requested_duration }} days • {{ ext.request_date|date:"M d" }}</p>
-                    </div>
-                    <span class="status-badge 
-                        {% if ext.status == 'Approved' %}badge-approved
-                        {% elif ext.status == 'Pending' %}badge-pending
-                        {% else %}badge-rejected{% endif %}">
-                        {{ ext.status }}
-                    </span>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-hourglass fa-3x mb-3"></i>
-                    <p>No extension requests</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+document.getElementById('resetFilter').addEventListener('click', function() {
+    document.getElementById('deptFilter').value = '';
+    filterStudents('');
+});
 
-<!-- Quick Actions (unchanged) -->
-<div class="card mt-3" data-aos="fade-up">
-    <div class="card-header">
-        <h5><i class="fas fa-bolt gradient-icon"></i> Quick Actions</h5>
-    </div>
-    <div class="card-body">
-        <div class="quick-actions-grid">
-            <a href="{% url 'admin_student_create' %}" class="quick-action-btn">
-                <i class="fas fa-user-plus"></i>
-                <span>Add Student</span>
-            </a>
-            <a href="{% url 'admin_supervisor_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #4caf50, #388e3c);">
-                <i class="fas fa-chalkboard-teacher"></i>
-                <span>Add Supervisor</span>
-            </a>
-            <a href="{% url 'admin_synopsis_list' %}?status=pending" class="quick-action-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
-                <i class="fas fa-clock"></i>
-                <span>Pending Synopsis ({{ pending_synopses }})</span>
-            </a>
-            <a href="{% url 'admin_extension_list' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                <i class="fas fa-hourglass-half"></i>
-                <span>Extension Requests ({{ pending_extensions }})</span>
-            </a>
-        </div>
-    </div>
-</div>
+function filterStudents(department) {
+    // Show loading indicator
+    document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" class="loading">Loading students...<i class="fas fa-spinner fa-spin ml-2"></i></td></tr>';
+    
+    // Create URL with filter parameter
+    var url = window.location.pathname;
+    if (department) {
+        url = url + '?department=' + encodeURIComponent(department);
+    }
+    
+    // Fetch filtered students via AJAX
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateStudentsTable(data.students);
+        document.getElementById('studentCount').innerText = 'Total: ' + data.total + ' students';
+        
+        // Update the department name in the title
+        var titleSpan = document.querySelector('#studentsListContainer .card-header span:first-child');
+        if (department) {
+            titleSpan.innerHTML = '<i class="fas fa-users"></i> Students - ' + department + ' Department';
+        } else {
+            titleSpan.innerHTML = '<i class="fas fa-users"></i> Students';
+        }
+        
+        // Update URL without reloading page
+        if (department) {
+            window.history.pushState({}, '', url);
+        } else {
+            window.history.pushState({}, '', window.location.pathname);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading students. Please try again.</td></tr>';
+    });
+}
+
+// Function to update the students table
+function updateStudentsTable(students) {
+    var tbody = document.getElementById('studentsTableBody');
+    tbody.innerHTML = '';
+    
+    if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No students found in this department.</td></tr>';
+        return;
+    }
+    
+    for (var i = 0; i < students.length; i++) {
+        var student = students[i];
+        var row = tbody.insertRow();
+        
+        row.insertCell(0).innerHTML = student.registration_no;
+        row.insertCell(1).innerHTML = '<strong>' + student.name + '</strong>';
+        row.insertCell(2).innerHTML = student.department;
+        row.insertCell(3).innerHTML = student.program;
+        row.insertCell(4).innerHTML = student.session;
+        row.insertCell(5).innerHTML = student.supervisor || 'Not Assigned';
+        
+        var statusCell = row.insertCell(6);
+        var statusClass = student.enrollment_status === 'Active' ? 'bg-success' : 'bg-secondary';
+        statusCell.innerHTML = '<span class="badge ' + statusClass + '">' + student.enrollment_status + '</span>';
+    }
+}
+</script>
+
 {% endblock %}

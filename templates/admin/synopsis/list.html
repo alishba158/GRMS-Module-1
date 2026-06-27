@@ -1,82 +1,85 @@
 {% extends 'admin/base.html' %}
 {% load static %}
 
-{% block title %}Synopsis - Admin{% endblock %}
-{% block page_title %}Synopsis Management{% endblock %}
+{% block title %}📄 Synopsis Management - Admin{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="fas fa-file-alt text-warning me-2"></i>
-            All Synopsis
-        </h5>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-alt text-primary"></i> Synopsis Management</h2>
+        <a href="{% url 'admin_synopsis_upload' %}" class="btn btn-primary">
+            <i class="fas fa-upload"></i> Upload Synopsis
+        </a>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Student</th>
-                        <th>Title</th>
-                        <th>Submitted</th>
-                        <th>Supervisor</th>
-                        <th>Status</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for syn in synopses %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
-                                <div>
-                                    <strong>{{ syn.student.user.get_full_name }}</strong><br>
-                                    <small class="text-muted">{{ syn.student.registration_no }}</small>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Student</th>
+                            <th>Title</th>
+                            <th>Submitted</th>
+                            <th>Supervisor</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for synopsis in synopses %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <strong>{{ synopsis.student.user.get_full_name }}</strong><br>
+                                <small class="text-muted">{{ synopsis.student.registration_no }}</small>
+                            </td>
+                            <td>{{ synopsis.title }}</td>
+                            <td>{{ synopsis.submission_date|date:"M d, Y" }}</td>
+                            <td>{{ synopsis.supervisor.user.get_full_name|default:"Not Assigned" }}</td>
+                            <td>
+                                <span class="badge {% if synopsis.status == 'Approved' %}bg-success{% elif synopsis.status == 'Rejected' %}bg-danger{% elif synopsis.status == 'Pending' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {{ synopsis.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <!-- View PDF -->
+                                    <a href="{% url 'admin_synopsis_view_pdf' synopsis.id %}" 
+                                       class="btn btn-info" target="_blank" title="View PDF">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <!-- Download -->
+                                    <a href="{% url 'admin_synopsis_download' synopsis.id %}" 
+                                       class="btn btn-primary" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <!-- Detail -->
+                                    <a href="{% url 'admin_synopsis_detail' synopsis.id %}" 
+                                       class="btn btn-secondary" title="Detail">
+                                        <i class="fas fa-info-circle"></i>
+                                    </a>
+                                    <!-- Delete -->
+                                    <a href="{% url 'admin_synopsis_delete' synopsis.id %}" 
+                                       class="btn btn-danger" title="Delete"
+                                       onclick="return confirm('⚠️ Are you sure you want to delete this synopsis?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
                                 </div>
-                            </div>
-                        </td>
-                        <td>{{ syn.title|truncatechars:40 }}</td>
-                        <td>{{ syn.submission_date|date:"M d, Y" }}</td>
-                        <td>
-                            {% if syn.supervisor %}
-                                <span class="badge bg-info">{{ syn.supervisor.user.get_full_name }}</span>
-                            {% else %}
-                                <span class="text-muted fst-italic">Not Assigned</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="status-badge 
-                                {% if syn.status == 'Approved' %}badge-approved
-                                {% elif syn.status == 'Pending' %}badge-pending
-                                {% else %}badge-rejected{% endif %}">
-                                {{ syn.status }}
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{% url 'admin_synopsis_detail' syn.id %}" class="btn btn-outline-success" title="View">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% if not syn.supervisor %}
-                                <a href="{% url 'admin_synopsis_assign' syn.id %}" class="btn btn-outline-primary" title="Assign Supervisor">
-                                    <i class="fas fa-user-tie"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                            <p class="text-muted mb-0">No synopsis found</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-file-alt fa-3x text-muted"></i>
+                                <p class="mt-2">No synopsis found. <a href="{% url 'admin_synopsis_upload' %}">Upload first synopsis</a></p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

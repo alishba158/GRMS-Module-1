@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import (
     Synopsis, 
     ProgressReport, 
@@ -7,7 +8,35 @@ from .models import (
     Examiner,
     ExtensionCase,
     DegreeLetter,
+    StudentDocument,
+    Student,
+    Meeting,  # ✅ YEH IMPORT ADD KARO
 )
+
+# ========== ✅ STUDENT DOCUMENT FORM ==========
+
+class StudentDocumentForm(forms.ModelForm):
+    class Meta:
+        model = StudentDocument
+        fields = ['student', 'document_type', 'title', 'document', 'expiry_date', 'remarks']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'document_type': forms.Select(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Admission Letter 2026'}),
+            'document': forms.FileInput(attrs={'class': 'form-control'}),
+            'expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Any additional notes...'}),
+        }
+    
+    def clean_document(self):
+        doc = self.cleaned_data.get('document')
+        if doc:
+            if not doc.name.lower().endswith('.pdf'):
+                raise forms.ValidationError("❌ Only PDF files are allowed.")
+            if doc.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("❌ File size must be less than 5MB.")
+        return doc
+
 
 # ========== SYNOPSIS MODULE FORMS ==========
 
@@ -96,7 +125,6 @@ class ThesisAssignmentForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.thesis = kwargs.pop('thesis', None)
         super().__init__(*args, **kwargs)
-        # Pre-select existing examiners if any
         if self.thesis:
             existing = self.thesis.evaluations.all()
             internal = existing.filter(examiner__examiner_type='Internal').first()
@@ -182,8 +210,7 @@ class ExtensionReviewForm(forms.ModelForm):
 class DegreeLetterRequestForm(forms.ModelForm):
     class Meta:
         model = DegreeLetter
-        fields = []  # No fields, just a request button
-        # This form is used only to handle POST, no fields needed.
+        fields = []
 
 
 class DegreeLetterVerificationForm(forms.ModelForm):
@@ -194,3 +221,95 @@ class DegreeLetterVerificationForm(forms.ModelForm):
             'verification_status': forms.Select(attrs={'class': 'form-control'}),
             'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+
+# ========== ✅ ADMIN SYNOPSIS UPLOAD FORM ==========
+
+class AdminSynopsisUploadForm(forms.ModelForm):
+    class Meta:
+        model = Synopsis
+        fields = ['student', 'title', 'document', 'supervisor', 'status']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter synopsis title'}),
+            'document': forms.FileInput(attrs={'class': 'form-control'}),
+            'supervisor': forms.Select(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+    
+    def clean_document(self):
+        doc = self.cleaned_data.get('document')
+        if doc:
+            if not doc.name.lower().endswith('.pdf'):
+                raise forms.ValidationError("❌ Only PDF files are allowed.")
+            if doc.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("❌ File size must be less than 5MB.")
+        return doc
+
+
+# ========== ✅ ADMIN THESIS UPLOAD FORM ==========
+
+class AdminThesisUploadForm(forms.ModelForm):
+    class Meta:
+        model = Thesis
+        fields = ['student', 'title', 'file', 'status']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter thesis title'}),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+    
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        if file:
+            if not file.name.lower().endswith('.pdf'):
+                raise forms.ValidationError("❌ Only PDF files are allowed.")
+            if file.size > 10 * 1024 * 1024:  # 10MB limit for thesis
+                raise forms.ValidationError("❌ File size must be less than 10MB.")
+        return file
+
+
+# ========== ✅ ADMIN DEGREE LETTER UPLOAD FORM ==========
+
+class AdminDegreeLetterUploadForm(forms.ModelForm):
+    class Meta:
+        model = DegreeLetter
+        fields = ['student', 'title', 'letter_file', 'verification_status', 'remarks']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Bachelor of Science Degree'}),
+            'letter_file': forms.FileInput(attrs={'class': 'form-control'}),
+            'verification_status': forms.Select(attrs={'class': 'form-control'}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Any remarks...'}),
+        }
+    
+    def clean_letter_file(self):
+        file = self.cleaned_data.get('letter_file')
+        if file:
+            if not file.name.lower().endswith('.pdf'):
+                raise forms.ValidationError("❌ Only PDF files are allowed.")
+            if file.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("❌ File size must be less than 5MB.")
+        return file
+
+
+# ========== ✅ ADMIN MEETING FORM ==========
+
+class AdminMeetingForm(forms.ModelForm):
+    class Meta:
+        model = Meeting
+        fields = ['student', 'supervisor', 'meeting_date', 'mode', 'agenda']
+        widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
+            'supervisor': forms.Select(attrs={'class': 'form-control'}),
+            'meeting_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'mode': forms.Select(attrs={'class': 'form-control'}),
+            'agenda': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter meeting agenda...'}),
+        }
+    
+    def clean_meeting_date(self):
+        meeting_date = self.cleaned_data.get('meeting_date')
+        if meeting_date and meeting_date < timezone.now():
+            raise forms.ValidationError("❌ Meeting date cannot be in the past!")
+        return meeting_date

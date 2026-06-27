@@ -1,0 +1,74 @@
+{% extends 'admin/base.html' %}
+{% block title %}Add Examiner{% endblock %}
+{% block page_title %}Add Examiner{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>Create New Examiner</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Username *</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Password *</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Confirm Password *</label>
+                    <input type="password" name="confirm_password" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>First Name *</label>
+                    <input type="text" name="first_name" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Last Name *</label>
+                    <input type="text" name="last_name" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Designation *</label>
+                    <input type="text" name="designation" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Examiner Type *</label>
+                    <select name="examiner_type" class="form-control" required>
+                        <option value="Internal">Internal</option>
+                        <option value="External">External</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Institution *</label>
+                    <input type="text" name="institution" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Area of Expertise *</label>
+                    <input type="text" name="area_of_expertise" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Phone No</label>
+                    <input type="text" name="phone_no" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Availability Status</label>
+                    <select name="availability_status" class="form-control">
+                        <option value="Available">Available</option>
+                        <option value="Not Available">Not Available</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">Create Examiner</button>
+            <a href="{% url 'admin_examiner_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

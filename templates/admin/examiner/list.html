@@ -1,0 +1,48 @@
+{% extends 'admin/base.html' %}
+{% block title %}Examiners - Admin{% endblock %}
+{% block page_title %}Examiners{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <h5>All Examiners</h5>
+        <a href="{% url 'admin_examiner_create' %}" class="btn btn-primary">+ Add Examiner</a>
+    </div>
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Type</th>
+                    <th>Institution</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ex in examiners %}
+                <tr>
+                    <td>{{ ex.name }}</td>
+                    <td>{{ ex.email }}</td>
+                    <td>{{ ex.examiner_type }}</td>
+                    <td>{{ ex.institution }}</td>
+                    <td>
+                        <span class="badge {% if ex.availability_status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ ex.availability_status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_examiner_detail' ex.id %}" class="btn btn-sm btn-info">View</a>
+                        <a href="{% url 'admin_examiner_update' ex.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'admin_examiner_delete' ex.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center">No examiners found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

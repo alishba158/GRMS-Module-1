@@ -1,0 +1,80 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}📅 Schedule Meeting - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-plus text-success"></i> Schedule Meeting (Admin)</h2>
+        <a href="{% url 'admin_meeting_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Schedule New Meeting</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">👤 Student <span class="text-danger">*</span></label>
+                            {{ form.student }}
+                            {% if form.student.errors %}
+                                <div class="text-danger">{{ form.student.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">👨‍🏫 Supervisor <span class="text-danger">*</span></label>
+                            {{ form.supervisor }}
+                            {% if form.supervisor.errors %}
+                                <div class="text-danger">{{ form.supervisor.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📅 Date & Time <span class="text-danger">*</span></label>
+                            {{ form.meeting_date }}
+                            {% if form.meeting_date.errors %}
+                                <div class="text-danger">{{ form.meeting_date.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted d-block">Select date and time for the meeting</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📱 Mode <span class="text-danger">*</span></label>
+                            {{ form.mode }}
+                            {% if form.mode.errors %}
+                                <div class="text-danger">{{ form.mode.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">📝 Agenda</label>
+                            {{ form.agenda }}
+                            {% if form.agenda.errors %}
+                                <div class="text-danger">{{ form.agenda.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-calendar-plus"></i> Schedule Meeting
+                            </button>
+                            <a href="{% url 'admin_meeting_list' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

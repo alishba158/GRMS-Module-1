@@ -5,238 +5,609 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- Welcome Message -->
-<div class="welcome-message" data-aos="fade-up">
-    <h3>Welcome back, {{ supervisor.user.get_full_name|default:request.user.username }}!</h3>
-    <p>Manage your students' research progress</p>
-</div>
 
-<!-- ===== STATS CARDS (Bootstrap Row) ===== -->
-<div class="row g-4 mb-4">
-    <!-- Students -->
-    <div class="col-md-3">
-        <div class="card text-white bg-primary h-100">
-            <div class="card-body">
-                <h5 class="card-title">Students</h5>
-                <h2 class="display-6">{{ total_students }}</h2>
-                <p class="mb-0">Assigned</p>
-            </div>
-        </div>
-    </div>
-    <!-- Pending Synopsis -->
-    <div class="col-md-3">
-        <div class="card text-white bg-warning h-100">
-            <div class="card-body">
-                <h5 class="card-title">Pending Synopsis</h5>
-                <h2 class="display-6">{{ pending_synopses }}</h2>
-                <p class="mb-0">Pending</p>
-            </div>
-        </div>
-    </div>
-    <!-- Pending Thesis -->
-    <div class="col-md-3">
-        <div class="card text-white bg-danger h-100">
-            <div class="card-body">
-                <h5 class="card-title">Pending Thesis</h5>
-                <h2 class="display-6">{{ pending_theses }}</h2>
-                <p class="mb-0">Under Review</p>
-            </div>
-        </div>
-    </div>
-    <!-- Pending Reports -->
-    <div class="col-md-3">
-        <div class="card text-white bg-info h-100">
-            <div class="card-body">
-                <h5 class="card-title">Pending Reports</h5>
-                <h2 class="display-6">{{ pending_reports }}</h2>
-                <a href="{% url 'supervisor_progress_list' %}?status=Submitted" class="text-white">Review →</a>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    /* Main container */
+    .dashboard-container {
+        padding: 0 5px;
+    }
+    
+    /* Stats Cards - 4 in a row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 3px solid;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1b5e20;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #555;
+    }
+    
+    /* Three cards row - ALWAYS 3 columns on desktop AND mobile */
+    .row-3-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    /* Two cards row */
+    .row-2-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    /* Common card styles */
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    
+    .card-title {
+        padding: 10px 15px;
+        background: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .card-content {
+        padding: 10px 15px;
+        min-height: 100px;
+    }
+    
+    .view-link {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: #2e7d32;
+        text-decoration: none;
+        background: #e8f5e9;
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+    
+    .empty-msg {
+        text-align: center;
+        padding: 15px;
+        color: #999;
+        font-size: 0.75rem;
+    }
+    
+    .list-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 0.75rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .badge-pending {
+        background: #ffc107;
+        color: #1e3a1e;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.6rem;
+    }
+    
+    .badge-info {
+        background: #17a2b8;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.6rem;
+    }
+    
+    .badge-success {
+        background: #28a745;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.6rem;
+    }
+    
+    .badge-secondary {
+        background: #6c757d;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.6rem;
+    }
+    
+    /* Quick actions */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 10px;
+    }
+    
+    .action-btn {
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: white;
+        padding: 10px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 0.7rem;
+        text-decoration: none;
+        transition: 0.2s;
+        display: block;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Welcome message */
+    .welcome-box {
+        background: white;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .welcome-box h3 {
+        margin: 0 0 5px 0;
+        color: #1b5e20;
+        font-size: 1.2rem;
+    }
+    .welcome-box p {
+        margin: 0;
+        color: #666;
+        font-size: 0.85rem;
+    }
+    
+    /* Table styles */
+    .students-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .students-table th,
+    .students-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 0.75rem;
+    }
+    
+    .students-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .students-table tr:hover {
+        background: #f5f5f5;
+    }
+    
+    /* Loading indicator */
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #2e7d32;
+        font-size: 0.85rem;
+    }
+    
+    /* ===== MOBILE RESPONSIVE ===== */
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .row-3-cards {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .row-2-cards {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .quick-actions {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.1rem;
+        }
+        
+        .stat-label {
+            font-size: 0.65rem;
+        }
+        
+        .card-title {
+            font-size: 0.7rem;
+            flex-direction: column;
+            text-align: center;
+            gap: 5px;
+        }
+        
+        .view-link {
+            font-size: 0.55rem;
+        }
+        
+        .empty-msg {
+            font-size: 0.65rem;
+            padding: 10px;
+        }
+        
+        .list-row {
+            font-size: 0.65rem;
+            flex-direction: column;
+            text-align: center;
+            gap: 5px;
+        }
+        
+        .welcome-box h3 {
+            font-size: 1rem;
+        }
+        
+        .welcome-box p {
+            font-size: 0.75rem;
+        }
+        
+        .students-table th,
+        .students-table td {
+            font-size: 0.65rem;
+            padding: 6px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .row-3-cards {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+        
+        .students-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
 
-<!-- ===== ROW: Synopsis Pending Review & Recent Activity ===== -->
-<div class="row mt-3">
-    <!-- Synopsis Pending Review Card (left) -->
-    <div class="col-md-6" data-aos="fade-right">
-        <div class="card border-warning h-100">
-            <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-clock"></i> Synopsis Pending Review</span>
-                <a href="{% url 'supervisor_synopsis_list' %}?status=submitted" class="btn btn-sm btn-light">View All</a>
-            </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    {% for syn in recent_synopses %}
-                        {% if syn.status == 'submitted' or syn.status == 'under_review' %}
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ syn.student.user.get_full_name }}</strong><br>
-                                    <small>{{ syn.title|truncatechars:30 }}</small>
-                                </div>
-                                <a href="{% url 'supervisor_synopsis_review' syn.id %}" class="btn btn-sm btn-outline-warning">Review</a>
-                            </div>
-                        </li>
-                        {% endif %}
-                    {% empty %}
-                    <li class="list-group-item text-center py-4">
-                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i><br>
-                        No pending reviews
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
+<div class="dashboard-container">
+
+    <!-- Welcome Message -->
+    <div class="welcome-box">
+        <h3>Welcome back, {{ supervisor.user.get_full_name|default:request.user.username }}!</h3>
+        <p>Manage your students' research progress</p>
+    </div>
+
+    <!-- Stats Row - 4 Cards -->
+    <div class="stats-row">
+        <div class="stat-card" style="border-left-color: #2e7d32;">
+            <div class="stat-value">{{ total_students|default:0 }}</div>
+            <div class="stat-label">Students</div>
+            <small style="font-size: 0.6rem; color: #777;">Assigned to you</small>
+        </div>
+        <div class="stat-card" style="border-left-color: #e67e22;">
+            <div class="stat-value">{{ pending_synopses|default:0 }}</div>
+            <div class="stat-label">Pending Synopsis</div>
+            <a href="{% url 'supervisor_synopsis_list' %}?status=submitted" class="view-link" style="margin-top: 5px; display: inline-block;">Review →</a>
+        </div>
+        <div class="stat-card" style="border-left-color: #e74c3c;">
+            <div class="stat-value">{{ pending_theses|default:0 }}</div>
+            <div class="stat-label">Pending Thesis</div>
+            <a href="{% url 'supervisor_thesis_list' %}?status=Submitted" class="view-link" style="margin-top: 5px; display: inline-block;">View →</a>
+        </div>
+        <div class="stat-card" style="border-left-color: #3498db;">
+            <div class="stat-value">{{ pending_reports|default:0 }}</div>
+            <div class="stat-label">Pending Reports</div>
+            <a href="{% url 'supervisor_progress_list' %}?status=Submitted" class="view-link" style="margin-top: 5px; display: inline-block;">Review →</a>
         </div>
     </div>
 
-    <!-- Recent Synopsis Activity Card (right) -->
-    <div class="col-md-6" data-aos="fade-left">
-        <div class="card border-info h-100">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-history"></i> Recent Synopsis Activity</span>
-                <a href="{% url 'supervisor_synopsis_list' %}" class="btn btn-sm btn-light">View All</a>
+    <!-- Row 1: 3 Cards (Recent Synopsis + Notifications + Upcoming Meetings) -->
+    <div class="row-3-cards">
+        <!-- Recent Synopsis Card -->
+        <div class="info-card">
+            <div class="card-title">
+                <span>📄 Recent Synopsis</span>
+                <a href="{% url 'supervisor_synopsis_list' %}" class="view-link">View All →</a>
             </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    {% for syn in recent_synopses|slice:":5" %}
-                    <li class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ syn.student.user.get_full_name }}</strong><br>
-                                <small>{{ syn.title|truncatechars:25 }}</small>
-                            </div>
-                            <span class="badge {% if syn.status == 'approved' %}bg-success
-                                              {% elif syn.status == 'rejected' %}bg-danger
-                                              {% elif syn.status == 'changes_requested' %}bg-warning
-                                              {% else %}bg-info{% endif %}">
-                                {{ syn.get_status_display }}
-                            </span>
-                        </div>
-                        <small class="text-muted">{{ syn.submission_date|date:"M d, Y" }}</small>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-center py-4">
-                        <i class="fas fa-file-alt fa-2x mb-2"></i><br>
-                        No synopsis activity
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ===== ROW: Extension Requests + Upcoming Meetings ===== -->
-<div class="row mt-3">
-    <!-- Extension Requests Card (UPDATED) -->
-    <div class="col-md-6" data-aos="fade-right">
-        <div class="card text-white bg-warning h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="text-uppercase">Extension Requests</h6>
-                        <h2 class="mb-0">{{ pending_extensions|default:0 }}</h2>
-                        <p class="mb-0 mt-2">Awaiting your review</p>
-                    </div>
-                    <i class="fas fa-hourglass-start fa-3x opacity-50"></i>
-                </div>
-                <hr class="bg-white opacity-25">
-                <a href="{% url 'supervisor_extension_list' %}?status=Pending" class="text-white text-decoration-none stretched-link">Review All <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Upcoming Meetings Card -->
-    <div class="col-md-6" data-aos="fade-left">
-        <div class="card border-success h-100">
-            <div class="card-header bg-success text-white">
-                <i class="fas fa-calendar-check"></i> Upcoming Meetings
-            </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    {% for meeting in upcoming_meetings|slice:":5" %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ meeting.student.user.get_full_name }}</strong>
-                            <br><small>{{ meeting.meeting_date|date:"M d, Y H:i" }}</small>
-                        </div>
-                        <span class="badge bg-info">{{ meeting.mode }}</span>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-center py-4">
-                        <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
-                        No upcoming meetings
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="card-footer text-end">
-                <a href="{% url 'supervisor_meeting_list' %}" class="btn btn-sm btn-success">View All</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ===== ROW: Recent Thesis ===== -->
-<div class="row mt-3">
-    <div class="col-md-12">
-        <div class="card" data-aos="fade-up">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5><i class="fas fa-scroll gradient-icon"></i> Recent Thesis</h5>
-                <a href="{% url 'supervisor_thesis_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
-            </div>
-            <div class="card-body">
-                {% if recent_theses %}
-                    {% for thesis in recent_theses|slice:":5" %}
-                    <div class="list-item hover-bg">
-                        <div class="item-icon rotate"><i class="fas fa-book"></i></div>
-                        <div class="item-info">
-                            <h6>{{ thesis.title|truncatechars:25 }}</h6>
-                            <p>{{ thesis.student.user.get_full_name }} • {{ thesis.submission_date|date:"M d" }}</p>
-                        </div>
-                        <span class="status-badge 
-                            {% if thesis.status == 'Approved' %}badge-approved
-                            {% elif thesis.status == 'Submitted' %}badge-pending
-                            {% else %}badge-info{% endif %}">
-                            {{ thesis.status }}
-                        </span>
+            <div class="card-content">
+                {% if recent_synopses %}
+                    {% for syn in recent_synopses|slice:":3" %}
+                    <div class="list-row">
+                        <span><strong>{{ syn.student.user.get_full_name }}</strong><br><small>{{ syn.title|truncatechars:20 }}</small></span>
+                        <span class="badge-pending">{{ syn.get_status_display }}</span>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-scroll fa-3x mb-3"></i>
-                        <p>No thesis yet</p>
+                    <div class="empty-msg">No synopsis activity</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Notifications Card -->
+        <div class="info-card">
+            <div class="card-title">
+                <span>🔔 Notifications</span>
+                <a href="{% url 'all_notifications' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-content">
+                {% if unread_notifications %}
+                    {% for notif in unread_notifications|slice:":3" %}
+                    <div class="list-row">
+                        <span>{{ notif.message|truncatechars:30 }}</span>
                     </div>
+                    {% endfor %}
+                    {% if unread_count > 0 %}
+                        <a href="{% url 'mark_all_read' %}" class="view-link" style="margin-top: 8px; display: inline-block;">Mark all read →</a>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-msg">No new notifications</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Upcoming Meetings Card -->
+        <div class="info-card">
+            <div class="card-title">
+                <span>📅 Upcoming Meetings</span>
+                <a href="{% url 'supervisor_meeting_create' %}" class="view-link">Schedule →</a>
+            </div>
+            <div class="card-content">
+                {% if upcoming_meetings %}
+                    {% for meeting in upcoming_meetings|slice:":3" %}
+                    <div class="list-row">
+                        <span><strong>{{ meeting.student.user.get_full_name }}</strong><br><small>{{ meeting.meeting_date|date:"M d, H:i" }}</small></span>
+                        <span class="badge-info">{{ meeting.mode }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-msg">No upcoming meetings</div>
                 {% endif %}
             </div>
         </div>
     </div>
-</div>
 
-<!-- Quick Actions -->
-<div class="card mt-3" data-aos="fade-up">
-    <div class="card-header">
-        <h5><i class="fas fa-bolt gradient-icon"></i> Quick Actions</h5>
-    </div>
-    <div class="card-body">
-        <div class="quick-actions-grid">
-            <a href="{% url 'supervisor_meeting_create' %}" class="quick-action-btn">
-                <i class="fas fa-calendar-plus"></i>
-                <span>Schedule Meeting</span>
-            </a>
-            <a href="{% url 'supervisor_synopsis_list' %}?status=submitted" class="quick-action-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
-                <i class="fas fa-clock"></i>
-                <span>Pending Synopsis ({{ pending_synopses }})</span>
-            </a>
-            <a href="{% url 'supervisor_extension_list' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                <i class="fas fa-hourglass-half"></i>
-                <span>Extension Requests ({{ pending_extensions }})</span>
-            </a>
-            <a href="{% url 'supervisor_thesis_list' %}?status=submitted" class="quick-action-btn" style="background: linear-gradient(135deg, #3498db, #2980b9);">
-                <i class="fas fa-scroll"></i>
-                <span>Pending Thesis ({{ pending_theses }})</span>
-            </a>
+    <!-- Row 2: 2 Cards (Extension Requests + Recent Thesis) -->
+    <div class="row-2-cards">
+        <!-- Extension Requests Card -->
+        <div class="info-card">
+            <div class="card-title">
+                <span>⏰ Extension Requests</span>
+                <a href="{% url 'supervisor_extension_list' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-content">
+                {% if recent_extensions %}
+                    {% for ext in recent_extensions|slice:":3" %}
+                    <div class="list-row">
+                        <span><strong>{{ ext.student.user.get_full_name }}</strong><br><small>{{ ext.requested_duration }} days</small></span>
+                        <span class="badge-pending">{{ ext.status }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-msg">No extension requests</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Thesis Card -->
+        <div class="info-card">
+            <div class="card-title">
+                <span>📚 Recent Thesis</span>
+                <a href="{% url 'supervisor_thesis_list' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-content">
+                {% if recent_theses %}
+                    {% for thesis in recent_theses|slice:":3" %}
+                    <div class="list-row">
+                        <span><strong>{{ thesis.student.user.get_full_name }}</strong><br><small>{{ thesis.title|truncatechars:20 }}</small></span>
+                        <span class="badge-pending">{{ thesis.status }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-msg">No thesis yet</div>
+                {% endif %}
+            </div>
         </div>
     </div>
+
+    <!-- Quick Actions -->
+    <div class="info-card">
+        <div class="card-title">
+            <span>⚡ Quick Actions</span>
+        </div>
+        <div class="card-content">
+            <div class="quick-actions">
+                <a href="{% url 'supervisor_meeting_create' %}" class="action-btn">📅 Schedule</a>
+                <a href="{% url 'supervisor_synopsis_list' %}?status=submitted" class="action-btn">📄 Review</a>
+                <a href="{% url 'supervisor_extension_list' %}?status=Pending" class="action-btn">⏰ Extensions</a>
+                <a href="{% url 'supervisor_thesis_list' %}?status=Submitted" class="action-btn">📚 Thesis</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Filter for Supervisor's Students (AJAX Filter - No Page Reload) -->
+    <div class="info-card">
+        <div class="card-title" style="background: linear-gradient(135deg, #2e7d32, #1b5e20); color: white;">
+            <span><i class="fas fa-filter"></i> Filter Your Students by Department</span>
+        </div>
+        <div class="card-content">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <select id="deptFilter" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd;">
+                        <option value="">All Departments</option>
+                        {% for dept in supervisor_departments %}
+                            <option value="{{ dept }}" {% if selected_supervisor_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <button id="resetFilter" class="view-link" style="background: #6c757d; color: white; border: none; cursor: pointer;">Reset Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students List - This will be updated via AJAX without page reload -->
+    <div id="studentsListContainer">
+        <div class="info-card">
+            <div class="card-title" style="background: #17a2b8; color: white;">
+                <span><i class="fas fa-users"></i> Your Students 
+                {% if selected_supervisor_dept %} - {{ selected_supervisor_dept }} Department{% endif %}
+                </span>
+                <span id="studentCount" style="font-size: 0.7rem;">Total: {{ supervisor_filtered_students|length }} students</span>
+            </div>
+            <div class="card-content" style="overflow-x: auto;">
+                <table class="students-table">
+                    <thead>
+                        <tr>
+                            <th>Reg No</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Program</th>
+                            <th>Session</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        {% for student in supervisor_filtered_students %}
+                        <tr>
+                            <td>{{ student.registration_no }}</td>
+                            <td><strong>{{ student.user.get_full_name }}</strong></td>
+                            <td>{{ student.department }}</td>
+                            <td>{{ student.program }}</td>
+                            <td>{{ student.session }}</td>
+                            <td>
+                                <span class="badge-{% if student.enrollment_status == 'Active' %}success{% else %}secondary{% endif %}">
+                                    {{ student.enrollment_status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr id="emptyRow">
+                            <td colspan="6" class="empty-msg">No students found in this department.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+// AJAX Filter functionality - Only updates students table, NO PAGE RELOAD
+document.getElementById('deptFilter').addEventListener('change', function() {
+    var department = this.value;
+    filterStudents(department);
+});
+
+document.getElementById('resetFilter').addEventListener('click', function() {
+    document.getElementById('deptFilter').value = '';
+    filterStudents('');
+});
+
+function filterStudents(department) {
+    // Show loading indicator
+    document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="6" class="loading">Loading students...</td></tr>';
+    
+    // Create URL with filter parameter
+    var url = window.location.pathname;
+    if (department) {
+        url = url + '?dept_filter=' + encodeURIComponent(department);
+    }
+    
+    // Fetch filtered students via AJAX
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateStudentsTable(data.students);
+        document.getElementById('studentCount').innerText = 'Total: ' + data.total + ' students';
+        
+        // Update the department name in the title
+        var titleSpan = document.querySelector('#studentsListContainer .card-title span:first-child');
+        if (department) {
+            titleSpan.innerHTML = '<i class="fas fa-users"></i> Your Students - ' + department + ' Department';
+        } else {
+            titleSpan.innerHTML = '<i class="fas fa-users"></i> Your Students';
+        }
+        
+        // Update URL without reloading page
+        if (department) {
+            window.history.pushState({}, '', url);
+        } else {
+            window.history.pushState({}, '', window.location.pathname);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="6" class="empty-msg">Error loading students. Please try again.</td></tr>';
+    });
+}
+
+// Function to update the students table
+function updateStudentsTable(students) {
+    var tbody = document.getElementById('studentsTableBody');
+    tbody.innerHTML = '';
+    
+    if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No students found in this department.</td></tr>';
+        return;
+    }
+    
+    for (var i = 0; i < students.length; i++) {
+        var student = students[i];
+        var row = tbody.insertRow();
+        
+        row.insertCell(0).innerHTML = student.registration_no;
+        row.insertCell(1).innerHTML = '<strong>' + student.name + '</strong>';
+        row.insertCell(2).innerHTML = student.department;
+        row.insertCell(3).innerHTML = student.program;
+        row.insertCell(4).innerHTML = student.session;
+        
+        var statusCell = row.insertCell(5);
+        var statusClass = student.enrollment_status === 'Active' ? 'success' : 'secondary';
+        statusCell.innerHTML = '<span class="badge-' + statusClass + '">' + student.enrollment_status + '</span>';
+    }
+}
+</script>
+
 {% endblock %}

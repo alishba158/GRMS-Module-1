@@ -1,0 +1,45 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}🗑️ Delete Synopsis - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Are you sure you want to delete this synopsis?</p>
+                    
+                    <div class="alert alert-warning">
+                        <strong>Student:</strong> {{ synopsis.student.user.get_full_name }}<br>
+                        <strong>Title:</strong> {{ synopsis.title }}<br>
+                        <strong>Status:</strong> {{ synopsis.get_status_display }}<br>
+                        <strong>Submitted:</strong> {{ synopsis.submission_date|date:"M d, Y" }}
+                    </div>
+                    
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Warning:</strong> This action cannot be undone! The PDF file will be permanently deleted.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-trash"></i> Yes, Delete
+                            </button>
+                            <a href="{% url 'admin_synopsis_list' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

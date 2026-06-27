@@ -1,0 +1,62 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Examiner Details - Admin{% endblock %}
+{% block page_title %}Examiner Details{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>{{ examiner.name }}</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <tr>
+                <th style="width: 200px;">Name</th>
+                <td>{{ examiner.name }}</td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td>{{ examiner.email }}</td>
+            </tr>
+            <tr>
+                <th>Phone No</th>
+                <td>{{ examiner.phone_no|default:"—" }}</td>
+            </tr>
+            <tr>
+                <th>Designation</th>
+                <td>{{ examiner.designation }}</td>
+            </tr>
+            <tr>
+                <th>Examiner Type</th>
+                <td>{{ examiner.examiner_type }}</td>
+            </tr>
+            <tr>
+                <th>Institution</th>
+                <td>{{ examiner.institution }}</td>
+            </tr>
+            <tr>
+                <th>Area of Expertise</th>
+                <td>{{ examiner.area_of_expertise }}</td>
+            </tr>
+            <tr>
+                <th>Availability Status</th>
+                <td>
+                    <span class="badge {% if examiner.availability_status == 'Available' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ examiner.availability_status }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <th>User Account</th>
+                <td>{{ examiner.user.username }}</td>
+            </tr>
+        </table>
+        <div class="mt-3">
+            <a href="{% url 'admin_examiner_update' examiner.id %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'admin_examiner_delete' examiner.id %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'admin_examiner_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

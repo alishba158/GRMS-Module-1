@@ -1,563 +1,592 @@
+{% extends 'student/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - GRMS</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- AOS Animation Library -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <!-- Custom Student CSS -->
-    <link rel="stylesheet" href="{% static 'css/student.css' %}">
-    <style>
-        /* Compact card adjustments */
-        .stat-card {
-            padding: 1rem !important;
+
+{% block title %}Dashboard - Student{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+    /* Stats Cards */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 3px solid;
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1b5e20;
+    }
+    .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 5px;
+    }
+    
+    /* Profile Card */
+    .profile-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+        overflow: hidden;
+        border: 1px solid #e8f5e9;
+    }
+    .profile-card .card-header {
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: white;
+        padding: 15px 20px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    .profile-card .card-header i {
+        color: #c6a15b;
+        margin-right: 8px;
+    }
+    .profile-body {
+        padding: 20px;
+    }
+    .profile-summary {
+        text-align: center;
+        padding: 10px;
+    }
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+    }
+    .profile-avatar i {
+        font-size: 2.5rem;
+        color: #c6a15b;
+    }
+    .profile-summary h4 {
+        margin: 5px 0;
+        color: #1b5e20;
+        font-size: 1.1rem;
+    }
+    .profile-summary p {
+        color: #666;
+        font-size: 0.8rem;
+        margin-bottom: 15px;
+    }
+    .view-profile-btn {
+        background: #2e7d32;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: 0.2s;
+    }
+    .view-profile-btn:hover {
+        background: #c6a15b;
+        transform: translateY(-2px);
+    }
+    
+    /* Cards Grid */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .card-header {
+        padding: 10px 12px;
+        background: #f5f5f5;
+        font-weight: 600;
+        font-size: 0.8rem;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .card-body {
+        padding: 8px 12px;
+        text-align: center;
+    }
+    .view-link {
+        display: inline-block;
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: #2e7d32;
+        text-decoration: none;
+        background: #e8f5e9;
+        padding: 2px 8px;
+        border-radius: 20px;
+        transition: 0.2s;
+        margin-top: 8px;
+    }
+    .view-link:hover {
+        background: #2e7d32;
+        color: white;
+    }
+    .badge-pending {
+        background: #ffc107;
+        color: #1e3a1e;
+        padding: 2px 6px;
+        border-radius: 20px;
+        font-size: 0.55rem;
+        display: inline-block;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 10px;
+        color: #999;
+        font-size: 0.7rem;
+    }
+    .card-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1b5e20;
+        margin: 5px 0;
+    }
+    .card-status {
+        font-size: 0.7rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+    
+    /* Degree Letter Card */
+    .degree-card {
+        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        color: white;
+    }
+    .degree-card .card-header {
+        background: rgba(255,255,255,0.1);
+        color: white;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .degree-card .view-link {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+    .degree-card .view-link:hover {
+        background: white;
+        color: #8e44ad;
+    }
+    
+    /* Quick Actions */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 5px;
+    }
+    .action-btn {
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: white;
+        padding: 8px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.65rem;
+        text-decoration: none;
+        transition: 0.2s;
+        display: block;
+    }
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .welcome-box {
+        background: white;
+        padding: 12px 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    .welcome-box h3 {
+        margin: 0 0 3px 0;
+        color: #1b5e20;
+        font-size: 1.1rem;
+    }
+    
+    /* Profile Modal */
+    .profile-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    }
+    .profile-modal-content {
+        background: white;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 85vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+    }
+    @keyframes modalSlideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .profile-modal-header {
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+    }
+    .profile-modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    .close-modal {
+        font-size: 1.8rem;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .close-modal:hover {
+        color: #c6a15b;
+    }
+    .profile-modal-body {
+        padding: 20px;
+    }
+    .profile-modal-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .profile-modal-field {
+        flex: 1;
+        min-width: 200px;
+    }
+    .profile-modal-field label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #888;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .profile-modal-field p {
+        background: #f0f7f0;
+        padding: 8px 12px;
+        border-radius: 10px;
+        color: #1b5e20;
+        font-weight: 500;
+        margin: 0;
+    }
+    .profile-modal-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    .modal-update-btn, .modal-password-btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 30px;
+        text-decoration: none;
+        text-align: center;
+        font-size: 0.8rem;
+        transition: 0.2s;
+    }
+    .modal-update-btn {
+        background: #2e7d32;
+        color: white;
+    }
+    .modal-update-btn:hover {
+        background: #1b5e20;
+        transform: translateY(-2px);
+    }
+    .modal-password-btn {
+        background: #f0f7f0;
+        color: #2e7d32;
+        border: 1px solid #2e7d32;
+    }
+    .modal-password-btn:hover {
+        background: #2e7d32;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .stats-row, .quick-actions {
+            grid-template-columns: 1fr;
+            gap: 10px;
         }
-        .stat-value {
-            font-size: 1.8rem !important;
-        }
-        .card {
-            margin-bottom: 1rem !important;
-        }
-        .card-body {
-            padding: 0.8rem 1rem !important;
-        }
-        .list-item {
-            padding: 0.5rem 0 !important;
-        }
-        .item-icon {
-            width: 32px !important;
-            height: 32px !important;
-            font-size: 0.9rem !important;
-        }
-        .item-info h6 {
-            font-size: 0.85rem !important;
-        }
-        .item-info p {
-            font-size: 0.7rem !important;
-        }
-        .status-badge {
-            padding: 0.2rem 0.6rem !important;
-            font-size: 0.65rem !important;
-        }
-        .progress-container {
-            margin-bottom: 1rem !important;
-        }
-        .welcome-message {
-            padding: 1rem !important;
-        }
-        .welcome-message h3 {
-            font-size: 1.3rem !important;
-        }
-        .welcome-message p {
-            font-size: 0.9rem !important;
-        }
-        /* Profile card styling */
-        .profile-card {
-            background: linear-gradient(135deg, #f5fbf5, #ffffff);
-            border-left: 4px solid #3498db;
-            margin-top: 0.5rem;
-        }
-        .profile-icon {
-            width: 50px;
-            height: 50px;
-            background: #e8f5e9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #2e7d32;
-            font-size: 1.5rem;
-            border: 2px solid white;
-            box-shadow: var(--shadow-sm);
-        }
-        /* Grid adjustments */
         .cards-grid {
-            display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+            gap: 10px;
         }
-        .full-width {
-            grid-column: span 2;
-        }
-        /* Quick actions grid */
-        .quick-actions-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-        }
-        .quick-action-btn {
-            background: linear-gradient(135deg, #2e7d32, #1b5e20);
-            color: white;
-            text-decoration: none;
-            padding: 1rem;
-            border-radius: 12px;
-            display: flex;
+        .profile-modal-row {
             flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            text-align: center;
         }
-        .quick-action-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        .profile-modal-actions {
+            flex-direction: column;
         }
-        .quick-action-btn i {
-            font-size: 1.5rem;
+        .card-number {
+            font-size: 1.2rem;
         }
-        .quick-action-btn span {
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        @media (max-width: 992px) {
-            .quick-actions-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        @media (max-width: 768px) {
-            .quick-actions-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h4>GRMS Student</h4>
-        </div>
-        <div class="nav-menu">
-            <a href="{% url 'student_dashboard' %}" class="active">Dashboard</a>
-            <a href="{% url 'student_synopsis_list' %}">My Synopsis</a>
-            <a href="{% url 'student_progress_list' %}">Progress Reports</a>
-            <a href="{% url 'student_thesis_list' %}">Thesis</a>
-            <a href="{% url 'student_meeting_list' %}">Meetings</a>
-            <a href="{% url 'student_extension_list' %}">Extensions</a>
-            <a href="{% url 'student_degree_request' %}">Degree Letter</a>
-        </div>
+    }
+</style>
 
-        <!-- ===== IMPROVED NOTIFICATIONS ===== -->
-        <div class="notifications-container">
-            <a href="#" class="nav-link" id="notificationBell">
-                <i class="fas fa-bell"></i>
-                <span>Notifications</span>
-                {% if unread_count > 0 %}
-                    <span class="notification-badge">{{ unread_count }}</span>
-                {% endif %}
-            </a>
-            <div class="notification-dropdown" id="notificationDropdown">
-                <div class="notification-header">
-                    <h6><i class="fas fa-bell me-2"></i>Notifications</h6>
-                    <a href="{% url 'mark_all_read' %}" class="mark-all-read">Mark all read</a>
-                </div>
-                <div class="notification-body">
-                    {% if unread_notifications %}
-                        {% for notif in unread_notifications %}
-                        <a href="{{ notif.link|default:'#' }}" class="notification-item">
-                            <div class="notification-icon">
-                                <i class="fas {% if 'approved' in notif.message %}fa-check-circle text-success
-                                          {% elif 'rejected' in notif.message %}fa-times-circle text-danger
-                                          {% elif 'submitted' in notif.message %}fa-file-alt text-info
-                                          {% else %}fa-bell text-warning{% endif %}"></i>
-                            </div>
-                            <div class="notification-content">
-                                <p class="notification-message">{{ notif.message|truncatechars:50 }}</p>
-                                <small class="notification-time">{{ notif.created_at|timesince }} ago</small>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    {% else %}
-                        <div class="notification-empty">
-                            <i class="fas fa-bell-slash fa-2x mb-2"></i>
-                            <p>No new notifications</p>
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="notification-footer">
-                    <a href="{% url 'all_notifications' %}">View all notifications</a>
-                </div>
-            </div>
-        </div>
+<div class="dashboard-container">
 
-        <div class="logout-container">
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+    <!-- Welcome Message -->
+    <div class="welcome-box">
+        <h3>Welcome back, {{ student.user.get_full_name|default:request.user.username }}!</h3>
+        <p>Track your research progress and manage your academic journey</p>
+    </div>
+
+    <!-- Profile Management Card -->
+    <div class="profile-card">
+        <div class="card-header">
+            <i class="fas fa-user-circle"></i> Profile Management
+        </div>
+        <div class="profile-body" style="text-align: center;">
+            <div class="profile-summary">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h4>{{ student.user.get_full_name }}</h4>
+                <p>{{ student.registration_no }}</p>
+                <button class="view-profile-btn" onclick="openProfileModal()">
+                    <i class="fas fa-eye"></i> View Complete Profile
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <h1>Student Dashboard</h1>
-        </div>
-
-        <!-- Welcome Message -->
-        <div class="welcome-message" data-aos="fade-up">
-            <h3>Welcome back, {{ student.user.get_full_name|default:request.user.username }}!</h3>
-            <p>Track your research progress and manage your academic journey</p>
-        </div>
-
-        <!-- Profile Card -->
-        <div class="card profile-card" data-aos="fade-up">
-            <div class="card-header">
-                <h5><i class="fas fa-user-circle"></i> Profile Management</h5>
+    <!-- Profile Modal -->
+    <div id="profileModal" class="profile-modal">
+        <div class="profile-modal-content">
+            <div class="profile-modal-header">
+                <h3><i class="fas fa-user-circle"></i> Student Profile</h3>
+                <span class="close-modal" onclick="closeProfileModal()">&times;</span>
             </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="profile-icon">
-                        <i class="fas fa-user-graduate"></i>
+            <div class="profile-modal-body">
+                <div class="profile-modal-row">
+                    <div class="profile-modal-field">
+                        <label>Full Name</label>
+                        <p>{{ student.user.get_full_name }}</p>
                     </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">{{ student.user.get_full_name|default:request.user.username }}</h6>
-                        <p class="mb-1 small text-muted">{{ student.registration_no|default:"REG-001" }} - {{ student.department|default:"Not Assigned" }}</p>
-                        <p class="mb-0 small text-muted">
-                            Supervisor: <strong>{{ student.supervisor.user.get_full_name|default:"Not Assigned" }}</strong>
-                        </p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'student_profile_update' %}" class="btn-action" style="padding: 0.3rem 1rem; font-size: 0.8rem;">
-                            <i class="fas fa-edit"></i> Update
-                        </a>
-                        <a href="{% url 'student_change_password' %}" class="btn-action" style="padding: 0.3rem 1rem; font-size: 0.8rem; background: #3498db;">
-                            <i class="fas fa-key"></i> Password
-                        </a>
+                    <div class="profile-modal-field">
+                        <label>Registration No</label>
+                        <p>{{ student.registration_no }}</p>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- ===== STATS ROW (5 CARDS) ===== -->
-        <div class="row mt-3">
-            <!-- Synopsis Status Card -->
-            <div class="col" data-aos="fade-up" data-aos-delay="100">
-                <div class="card text-white bg-primary h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Synopsis Status</h5>
-                        {% with latest_synopsis=recent_synopses.first %}
-                            {% if latest_synopsis %}
-                                <h3>{{ latest_synopsis.get_status_display }}</h3>
-                                <p class="mb-0">Title: {{ latest_synopsis.title|truncatechars:30 }}</p>
-                                <small>Submitted: {{ latest_synopsis.submission_date|date:"M d, Y" }}</small>
-                                {% if latest_synopsis.status == 'changes_requested' %}
-                                    <div class="mt-3">
-                                        <a href="{% url 'student_synopsis_resubmit' latest_synopsis.id %}" 
-                                           class="btn btn-warning btn-sm">Resubmit with Changes</a>
-                                    </div>
-                                {% endif %}
-                                {% if latest_synopsis.status == 'rejected' %}
-                                    <div class="mt-3">
-                                        <span class="badge bg-danger">Rejected</span>
-                                        <a href="{% url 'student_synopsis_submit' %}" 
-                                           class="btn btn-light btn-sm">Submit New</a>
-                                    </div>
-                                {% endif %}
-                            {% else %}
-                                <h3>Not Submitted</h3>
-                                <a href="{% url 'student_synopsis_submit' %}" 
-                                   class="btn btn-light mt-2">Submit Synopsis</a>
-                            {% endif %}
-                        {% endwith %}
+                <div class="profile-modal-row">
+                    <div class="profile-modal-field">
+                        <label>Department</label>
+                        <p>{{ student.department }}</p>
+                    </div>
+                    <div class="profile-modal-field">
+                        <label>Session</label>
+                        <p>{{ student.session }}</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Progress Reports Card -->
-            <div class="col" data-aos="fade-up" data-aos-delay="200">
-                <div class="card text-white bg-success h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Progress Reports</h5>
-                        <h3>{{ total_reports }}</h3>
-                        <p class="mb-0">Pending: {{ pending_reports }}</p>
-                        <a href="{% url 'student_progress_list' %}" class="text-white">View All →</a>
+                <div class="profile-modal-row">
+                    <div class="profile-modal-field">
+                        <label>Program</label>
+                        <p>{{ student.program }}</p>
+                    </div>
+                    <div class="profile-modal-field">
+                        <label>Enrollment Status</label>
+                        <p>{{ student.get_enrollment_status_display }}</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Meetings Card -->
-            <div class="col" data-aos="fade-up" data-aos-delay="300">
-                <div class="card text-white bg-secondary h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Meetings</h5>
-                        <h3>{{ total_meetings }}</h3>
-                        <p class="mb-0">Total</p>
-                        <a href="{% url 'student_meeting_list' %}" class="text-white">View All →</a>
+                <div class="profile-modal-row">
+                    <div class="profile-modal-field">
+                        <label>Supervisor</label>
+                        <p>{{ student.supervisor.user.get_full_name|default:"Not Assigned" }}</p>
+                    </div>
+                    <div class="profile-modal-field">
+                        <label>Admission Date</label>
+                        <p>{{ student.admission_date|date:"M d, Y" }}</p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Extensions Card -->
-            <div class="col" data-aos="fade-up" data-aos-delay="400">
-                <div class="card text-white bg-info h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-uppercase">Extensions</h6>
-                                <h2 class="mb-0">{{ recent_extensions.count }}</h2>
-                            </div>
-                            <i class="fas fa-hourglass-half fa-3x opacity-50"></i>
-                        </div>
-                        <p class="mb-0 mt-2">Latest: {{ recent_extensions.first.get_status_display|default:"None" }}</p>
-                        <a href="{% url 'student_extension_list' %}" class="text-white text-decoration-none stretched-link">View All →</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Degree Letter Card (New) -->
-            <div class="col" data-aos="fade-up" data-aos-delay="500">
-                <div class="card text-white h-100" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-uppercase">Degree Letter</h6>
-                                <h2 class="mb-0">{{ degree_status|default:"—" }}</h2>
-                            </div>
-                            <i class="fas fa-graduation-cap fa-3x opacity-50"></i>
-                        </div>
-                        <p class="mb-0 mt-2">{{ degree_status_text|default:"Not requested" }}</p>
-                        <a href="{% url 'student_degree_request' %}" class="text-white text-decoration-none stretched-link">View →</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Progress Overview (optional) -->
-        <div class="progress-container" data-aos="fade-up">
-            <div class="progress-label">
-                <span>Overall Research Progress</span>
-                <span>65%</span>
-            </div>
-            <div class="progress-bar-custom">
-                <div class="progress-fill" style="width: 65%"></div>
-            </div>
-        </div>
-
-        <!-- Recent Activities: First Row (Recent Synopsis & Recent Thesis) -->
-        <div class="cards-grid">
-            <!-- Recent Synopsis List -->
-            <div class="card" data-aos="fade-right">
-                <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-file-alt"></i> Recent Synopsis</span>
-                    <a href="{% url 'student_synopsis_list' %}" class="btn btn-sm btn-light">View All</a>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        {% for syn in recent_synopses %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ syn.title|truncatechars:40 }}</strong><br>
-                                <small>{{ syn.submission_date|date:"M d, Y" }}</small>
-                            </div>
-                            <div>
-                                <span class="badge {% if syn.status == 'approved' %}bg-success
-                                                  {% elif syn.status == 'rejected' %}bg-danger
-                                                  {% elif syn.status == 'changes_requested' %}bg-warning
-                                                  {% else %}bg-info{% endif %}">
-                                    {{ syn.get_status_display }}
-                                </span>
-                                <a href="{% url 'student_synopsis_detail' syn.id %}" 
-                                   class="btn btn-sm btn-outline-secondary ms-2">View</a>
-                            </div>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item text-center py-4">
-                            <i class="fas fa-file-alt fa-2x mb-2"></i><br>
-                            No synopsis submitted yet.<br>
-                            <a href="{% url 'student_synopsis_submit' %}" class="btn btn-primary btn-sm mt-2">
-                                Submit Your First Synopsis
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Recent Thesis -->
-            <div class="card" data-aos="fade-left">
-                <div class="card-header">
-                    <h5><i class="fas fa-scroll gradient-icon"></i> Recent Thesis</h5>
-                    <a href="{% url 'student_thesis_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="card-body">
-                    {% if recent_theses %}
-                        {% for thesis in recent_theses|slice:":3" %}
-                        <div class="list-item hover-bg">
-                            <div class="item-icon rotate"><i class="fas fa-book"></i></div>
-                            <div class="item-info">
-                                <h6>{{ thesis.title|truncatechars:25 }}</h6>
-                                <p>{{ thesis.submission_date|date:"M d" }}</p>
-                            </div>
-                            <span class="status-badge 
-                                {% if thesis.status == 'Approved' %}badge-approved
-                                {% elif thesis.status == 'Submitted' %}badge-pending
-                                {% else %}badge-info{% endif %}">
-                                {{ thesis.status }}
-                            </span>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-scroll fa-3x mb-3"></i>
-                            <p>No thesis yet</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activities: Second Row (Upcoming Meetings & Extensions) -->
-        <div class="cards-grid mt-3">
-            <!-- Upcoming Meetings Card -->
-            <div class="card" data-aos="fade-right" data-aos-delay="100">
-                <div class="card-header bg-primary text-white">
-                    <i class="fas fa-calendar-check"></i> Upcoming Meetings
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        {% for meeting in upcoming_meetings|slice:":5" %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ meeting.meeting_date|date:"M d, Y H:i" }}</strong>
-                                <br><small>{{ meeting.agenda|truncatechars:30 }}</small>
-                            </div>
-                            <span class="badge bg-info">{{ meeting.mode }}</span>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item text-center py-4">
-                            <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
-                            No upcoming meetings
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                <div class="card-footer text-end">
-                    <a href="{% url 'student_meeting_list' %}" class="btn btn-sm btn-primary">View All</a>
-                </div>
-            </div>
-
-            <!-- Recent Extensions -->
-            <div class="card" data-aos="fade-left" data-aos-delay="200">
-                <div class="card-header">
-                    <h5><i class="fas fa-hourglass-half gradient-icon"></i> Recent Extensions</h5>
-                    <a href="{% url 'student_extension_list' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="card-body">
-                    {% if recent_extensions %}
-                        {% for ext in recent_extensions|slice:":3" %}
-                        <div class="list-item hover-bg">
-                            <div class="item-icon"><i class="fas fa-hourglass-half"></i></div>
-                            <div class="item-info">
-                                <h6>{{ ext.requested_duration }} days</h6>
-                                <p>{{ ext.request_date|date:"M d" }}</p>
-                            </div>
-                            <span class="status-badge 
-                                {% if ext.status == 'Approved' %}badge-approved
-                                {% elif ext.status == 'Pending' %}badge-pending
-                                {% else %}badge-rejected{% endif %}">
-                                {{ ext.status }}
-                            </span>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-hourglass fa-3x mb-3"></i>
-                            <p>No extension requests</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="card mt-3" data-aos="fade-up">
-            <div class="card-header">
-                <h5><i class="fas fa-bolt gradient-icon"></i> Quick Actions</h5>
-            </div>
-            <div class="card-body">
-                <div class="quick-actions-grid">
-                    <a href="{% url 'student_synopsis_create' %}" class="quick-action-btn">
-                        <i class="fas fa-file-upload"></i>
-                        <span>Submit Synopsis</span>
+                <div class="profile-modal-actions">
+                    <a href="{% url 'student_profile_update' %}" class="modal-update-btn">
+                        <i class="fas fa-edit"></i> Update Profile
                     </a>
-                    <a href="{% url 'student_thesis_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #4caf50, #388e3c);">
-                        <i class="fas fa-book"></i>
-                        <span>Submit Thesis</span>
-                    </a>
-                    <a href="{% url 'student_progress_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Submit Report</span>
-                    </a>
-                    <a href="{% url 'student_extension_create' %}" class="quick-action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
-                        <i class="fas fa-hourglass-half"></i>
-                        <span>Request Extension</span>
+                    <a href="{% url 'student_change_password' %}" class="modal-password-btn">
+                        <i class="fas fa-key"></i> Change Password
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="{% static 'js/student.js' %}"></script>
-    <script>
-        AOS.init({
-            duration: 600,
-            once: true,
-            offset: 5
-        });
-        
-        // Counter animation (optional)
-        const counters = document.querySelectorAll('.counter, .stat-value');
-        counters.forEach(counter => {
-            const target = parseInt(counter.innerText);
-            if (target > 0) {
-                let count = 0;
-                const speed = Math.floor(1500 / target);
-                const updateCount = () => {
-                    if (count < target) {
-                        count++;
-                        counter.innerText = count;
-                        setTimeout(updateCount, speed);
-                    } else {
-                        counter.innerText = target;
-                    }
-                };
-                updateCount();
-            }
-        });
-    </script>
-    <!-- Notification Dropdown Toggle Script -->
-    <script>
-        // Notification dropdown toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const bell = document.getElementById('notificationBell');
-            const dropdown = document.getElementById('notificationDropdown');
-            
-            if (bell && dropdown) {
-                bell.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    dropdown.classList.toggle('show');
-                });
-                
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!bell.contains(e.target) && !dropdown.contains(e.target)) {
-                        dropdown.classList.remove('show');
-                    }
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card" style="border-left-color: #2e7d32;">
+            <div class="stat-value">{{ total_reports|default:0 }}</div>
+            <div class="stat-label">Progress Reports</div>
+            <small>Total submitted</small>
+        </div>
+        <div class="stat-card" style="border-left-color: #e67e22;">
+            <div class="stat-value">{{ pending_reports|default:0 }}</div>
+            <div class="stat-label">Pending Reports</div>
+            <small>Awaiting review</small>
+        </div>
+        <div class="stat-card" style="border-left-color: #3498db;">
+            <div class="stat-value">{{ total_meetings|default:0 }}</div>
+            <div class="stat-label">Meetings</div>
+            <small>Total scheduled</small>
+        </div>
+        <div class="stat-card" style="border-left-color: #9b59b6;">
+            <div class="stat-value">{{ recent_extensions.count|default:0 }}</div>
+            <div class="stat-label">Extensions</div>
+            <a href="{% url 'student_extension_list' %}" class="view-link" style="margin-top: 5px;">View →</a>
+        </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="cards-grid">
+        <div class="card">
+            <div class="card-header">
+                <span>📄 Synopsis Status</span>
+                <a href="{% url 'student_synopsis_list' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-body">
+                {% with latest_synopsis=recent_synopses.first %}
+                    {% if latest_synopsis %}
+                        <div class="card-number">{{ recent_synopses.count }}</div>
+                        <div class="card-status">Synopsis submitted</div>
+                        <div class="badge-pending">{{ latest_synopsis.get_status_display }}</div>
+                    {% else %}
+                        <div class="empty-state">No synopsis submitted yet</div>
+                    {% endif %}
+                    <a href="{% url 'student_synopsis_submit' %}" class="view-link">Submit New →</a>
+                {% endwith %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>📅 Upcoming Meetings</span>
+                <a href="{% url 'student_meeting_list' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-body">
+                <div class="card-number">{{ upcoming_meetings.count }}</div>
+                <div class="card-status">Upcoming meetings</div>
+                {% if not upcoming_meetings %}
+                    <div class="empty-state">No upcoming meetings</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>⏰ Recent Extensions</span>
+                <a href="{% url 'student_extension_list' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-body">
+                <div class="card-number">{{ recent_extensions.count }}</div>
+                <div class="card-status">Extension requests</div>
+                <a href="{% url 'student_extension_create' %}" class="view-link">Request Extension →</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>📚 Recent Thesis</span>
+                <a href="{% url 'student_thesis_list' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-body">
+                <div class="card-number">{{ recent_theses.count }}</div>
+                <div class="card-status">Thesis submitted</div>
+                <a href="{% url 'student_thesis_create' %}" class="view-link">Submit Thesis →</a>
+            </div>
+        </div>
+        <div class="card degree-card">
+            <div class="card-header">
+                <span>🎓 Degree Letter</span>
+                <a href="{% url 'student_degree_request' %}" class="view-link">Request →</a>
+            </div>
+            <div class="card-body">
+                {% if degree %}
+                    <div>Status: <strong>{{ degree.get_verification_status_display }}</strong></div>
+                    {% if degree.letter_file %}
+                        <a href="{{ degree.letter_file.url }}" class="view-link">Download PDF</a>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state" style="color: rgba(255,255,255,0.8);">Not requested yet</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span>🔔 Notifications</span>
+                <a href="{% url 'all_notifications' %}" class="view-link">View All →</a>
+            </div>
+            <div class="card-body" style="text-align: center;">
+                <div class="card-number">{{ unread_count|default:0 }}</div>
+                <div class="card-status">Unread notifications</div>
+                {% if unread_count > 0 %}
+                    <a href="{% url 'mark_all_read' %}" class="view-link">Mark all read →</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <span>⚡ Quick Actions</span>
+        </div>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="{% url 'student_synopsis_submit' %}" class="action-btn">📄 Submit Synopsis</a>
+                <a href="{% url 'student_progress_create' %}" class="action-btn">📊 Submit Report</a>
+                <a href="{% url 'student_thesis_create' %}" class="action-btn">📚 Submit Thesis</a>
+                <a href="{% url 'student_extension_create' %}" class="action-btn">⏰ Request Extension</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== JAVASCRIPT - Add this at the end ===== -->
+<script>
+    function openProfileModal() {
+        document.getElementById('profileModal').style.display = 'flex';
+    }
+    function closeProfileModal() {
+        document.getElementById('profileModal').style.display = 'none';
+    }
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        var modal = document.getElementById('profileModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+
+{% endblock %}

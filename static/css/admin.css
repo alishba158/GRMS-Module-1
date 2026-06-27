@@ -62,17 +62,8 @@ body {
     font-weight: 700;
     margin: 0;
     font-size: 1.5rem;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
 }
 
-.sidebar-header h4 i {
-    color: #c6a15b;  /* Gold color for icon */
-    font-size: 1.8rem;
-}
 .nav-menu {
     flex: 1;
     padding: 1.5rem 0;

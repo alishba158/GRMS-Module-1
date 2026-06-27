@@ -1,0 +1,60 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Update Examiner - Admin{% endblock %}
+{% block page_title %}Update Examiner{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>Update {{ examiner.name }}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Name *</label>
+                    <input type="text" name="name" class="form-control" value="{{ examiner.name }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Email *</label>
+                    <input type="email" name="email" class="form-control" value="{{ examiner.email }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Phone No</label>
+                    <input type="text" name="phone_no" class="form-control" value="{{ examiner.phone_no }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Designation *</label>
+                    <input type="text" name="designation" class="form-control" value="{{ examiner.designation }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Examiner Type *</label>
+                    <select name="examiner_type" class="form-control" required>
+                        <option value="Internal" {% if examiner.examiner_type == 'Internal' %}selected{% endif %}>Internal</option>
+                        <option value="External" {% if examiner.examiner_type == 'External' %}selected{% endif %}>External</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Institution *</label>
+                    <input type="text" name="institution" class="form-control" value="{{ examiner.institution }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Area of Expertise *</label>
+                    <input type="text" name="area_of_expertise" class="form-control" value="{{ examiner.area_of_expertise }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Availability Status</label>
+                    <select name="availability_status" class="form-control">
+                        <option value="Available" {% if examiner.availability_status == 'Available' %}selected{% endif %}>Available</option>
+                        <option value="Not Available" {% if examiner.availability_status == 'Not Available' %}selected{% endif %}>Not Available</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">Update Examiner</button>
+            <a href="{% url 'admin_examiner_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

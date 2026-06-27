@@ -1,40 +1,49 @@
 {% extends 'admin/base.html' %}
 {% load static %}
 
-{% block title %}Meeting Detail - Admin{% endblock %}
-{% block page_title %}Meeting Details{% endblock %}
+{% block title %}📄 Meeting Details - Admin{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5><i class="fas fa-calendar-check"></i> Meeting</h5>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-alt text-primary"></i> Meeting Details</h2>
         <a href="{% url 'admin_meeting_list' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> Back to List
         </a>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <table class="table">
-                    <tr><th>Student:</th><td>{{ meeting.student.user.get_full_name }}</td></tr>
-                    <tr><th>Supervisor:</th><td>{{ meeting.supervisor.user.get_full_name }}</td></tr>
-                    <tr><th>Date & Time:</th><td>{{ meeting.meeting_date|date:"M d, Y h:i A" }}</td></tr>
-                    <tr><th>Mode:</th><td>{{ meeting.mode }}</td></tr>
-                </table>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>👤 Student:</strong> {{ meeting.student.user.get_full_name }}</p>
+                    <p><strong>📋 Registration:</strong> {{ meeting.student.registration_no }}</p>
+                    <p><strong>👨‍🏫 Supervisor:</strong> {{ meeting.supervisor.user.get_full_name }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>📅 Date:</strong> {{ meeting.meeting_date|date:"M d, Y H:i" }}</p>
+                    <p><strong>📱 Mode:</strong> {{ meeting.mode }}</p>
+                    <p><strong>📝 Agenda:</strong> {{ meeting.agenda|default:"No agenda" }}</p>
+                </div>
             </div>
-            <div class="col-md-6">
-                <table class="table">
-                    <tr><th>Agenda:</th><td>{{ meeting.agenda|default:"—" }}</td></tr>
-                    <tr><th>Summary:</th><td>{{ meeting.summary|default:"—" }}</td></tr>
-                </table>
+            
+            {% if meeting.summary %}
+            <div class="mt-3">
+                <strong>📋 Summary:</strong>
+                <p class="bg-light p-2 rounded">{{ meeting.summary }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{% url 'admin_meeting_edit' meeting.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{% url 'admin_meeting_delete' meeting.id %}" class="btn btn-danger"
+                   onclick="return confirm('⚠️ Delete this meeting?')">
+                    <i class="fas fa-trash"></i> Delete
+                </a>
             </div>
         </div>
-        {% if meeting.minutes_file %}
-        <hr>
-        <a href="{{ meeting.minutes_file.url }}" target="_blank" class="btn-action">
-            <i class="fas fa-download"></i> Download Minutes
-        </a>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}📤 Upload Document - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-upload text-success"></i> Upload New Document</h2>
+        <a href="{% url 'admin_document_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-pdf"></i> Document Upload Form</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Student Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.student.id_for_label }}" class="form-label fw-bold">
+                                👤 Student <span class="text-danger">*</span>
+                            </label>
+                            {{ form.student }}
+                            {% if form.student.errors %}
+                                <div class="text-danger">{{ form.student.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Select the student for this document</small>
+                        </div>
+
+                        <!-- Document Type Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.document_type.id_for_label }}" class="form-label fw-bold">
+                                📄 Document Type <span class="text-danger">*</span>
+                            </label>
+                            {{ form.document_type }}
+                            {% if form.document_type.errors %}
+                                <div class="text-danger">{{ form.document_type.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Select Admission or Enrollment Letter</small>
+                        </div>
+
+                        <!-- Title Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                                📝 Title <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger">{{ form.title.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">e.g., Admission Letter 2026 or Enrollment Letter Spring 2026</small>
+                        </div>
+
+                        <!-- Document File Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.document.id_for_label }}" class="form-label fw-bold">
+                                📎 PDF Document <span class="text-danger">*</span>
+                            </label>
+                            {{ form.document }}
+                            {% if form.document.errors %}
+                                <div class="text-danger">{{ form.document.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted d-block">Only PDF files allowed, Max 5MB</small>
+                        </div>
+
+                        <!-- Expiry Date Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.expiry_date.id_for_label }}" class="form-label fw-bold">
+                                📅 Expiry Date
+                            </label>
+                            {{ form.expiry_date }}
+                            {% if form.expiry_date.errors %}
+                                <div class="text-danger">{{ form.expiry_date.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted d-block">Leave blank if no expiry date</small>
+                        </div>
+
+                        <!-- Remarks Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.remarks.id_for_label }}" class="form-label fw-bold">
+                                💬 Remarks
+                            </label>
+                            {{ form.remarks }}
+                            {% if form.remarks.errors %}
+                                <div class="text-danger">{{ form.remarks.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Any additional notes about this document</small>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-upload"></i> Upload Document
+                            </button>
+                            <a href="{% url 'admin_document_list' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

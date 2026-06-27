@@ -1,12 +1,191 @@
 {% extends 'examiner/base.html' %}
+{% load static %}
+
+{% block title %}Submit Evaluation - Examiner{% endblock %}
+{% block page_title %}Submit Evaluation{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Submit Evaluation for {{ evaluation.thesis.title }}</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Submit</button>
-        <a href="{% url 'examiner_dashboard' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+
+<style>
+    .form-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 25px;
+    }
+    .form-header {
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .form-header i {
+        color: #c6a15b;
+        margin-right: 8px;
+    }
+    .form-body {
+        padding: 25px;
+    }
+    .thesis-info {
+        background: #f0f7f0;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+    .thesis-info p {
+        margin: 5px 0;
+        color: #1b5e20;
+    }
+    .thesis-info strong {
+        color: #2e7d32;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #555;
+    }
+    .form-group label i {
+        color: #c6a15b;
+        width: 20px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: #2e7d32;
+        box-shadow: 0 0 5px rgba(46,125,50,0.3);
+    }
+    .form-group small {
+        display: block;
+        margin-top: 5px;
+        color: #999;
+        font-size: 0.7rem;
+    }
+    .btn-submit {
+        background: linear-gradient(135deg, #2e7d32, #1b5e20);
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46,125,50,0.3);
+    }
+    .btn-cancel {
+        background: #f0f7f0;
+        color: #2e7d32;
+        padding: 12px 25px;
+        border: 1px solid #2e7d32;
+        border-radius: 30px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-left: 10px;
+        transition: 0.2s;
+    }
+    .btn-cancel:hover {
+        background: #2e7d32;
+        color: white;
+    }
+    .required-star {
+        color: #e74c3c;
+    }
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 15px;
+        }
+        .btn-submit, .btn-cancel {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .btn-cancel {
+            margin-left: 0;
+            display: block;
+        }
+    }
+</style>
+
+<div class="form-card">
+    <div class="form-header">
+        <i class="fas fa-clipboard-list"></i> Submit Evaluation for "{{ evaluation.thesis.title }}"
+    </div>
+    <div class="form-body">
+        
+        <!-- Thesis Information -->
+        <div class="thesis-info">
+            <p><strong><i class="fas fa-user-graduate"></i> Student:</strong> {{ evaluation.thesis.student.user.get_full_name }} ({{ evaluation.thesis.student.registration_no }})</p>
+            <p><strong><i class="fas fa-calendar-alt"></i> Submitted:</strong> {{ evaluation.thesis.submission_date|date:"M d, Y H:i" }}</p>
+            <p><strong><i class="fas fa-file-pdf"></i> Thesis:</strong> <a href="{{ evaluation.thesis.file.url }}" target="_blank">Download PDF</a></p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label><i class="fas fa-star"></i> Marks <span class="required-star">*</span></label>
+                <input type="number" name="marks" min="0" max="100" required placeholder="Enter marks (0-100)">
+                <small>Range: 0 to 100</small>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-chart-line"></i> Result <span class="required-star">*</span></label>
+                <select name="result" required>
+                    <option value="">Select Result</option>
+                    <option value="Pass">Pass</option>
+                    <option value="Fail">Fail</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-thumbs-up"></i> Recommendation <span class="required-star">*</span></label>
+                <select name="recommendation" required>
+                    <option value="">Select Recommendation</option>
+                    <option value="Accept">Accept</option>
+                    <option value="Minor Changes">Minor Changes</option>
+                    <option value="Major Changes">Major Changes</option>
+                    <option value="Reject">Reject</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Comments</label>
+                <textarea name="comments" rows="4" placeholder="Write your comments here..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-file-upload"></i> Evaluation Report (PDF)</label>
+                <input type="file" name="report_file" accept=".pdf">
+                <small>Optional. Only PDF files allowed. Max 5MB.</small>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Submit Evaluation
+                </button>
+                <a href="{% url 'examiner_dashboard' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
+
 {% endblock %}

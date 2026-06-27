@@ -54,3 +54,18 @@ function initLogoutConfirm() {
         });
     }
 }
+<script>
+    function openProfileModal() {
+        document.getElementById('profileModal').style.display = 'flex';
+    }
+    function closeProfileModal() {
+        document.getElementById('profileModal').style.display = 'none';
+    }
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        var modal = document.getElementById('profileModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>

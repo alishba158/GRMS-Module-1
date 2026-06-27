@@ -30,7 +30,8 @@ class Student(models.Model):
     )
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
-    registration_no = models.CharField(max_length=30, unique=True)
+    # 🔥 CHANGE: unique=True hata diya, db_index=False kar diya
+    registration_no = models.CharField(max_length=30, unique=False, db_index=False)
     department = models.CharField(max_length=100)
     session = models.CharField(max_length=20)
     program = models.CharField(max_length=50)
@@ -51,7 +52,8 @@ class Supervisor(models.Model):
     )
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='supervisor_profile')
-    employee_id = models.CharField(max_length=30, unique=True, blank=True, null=True)
+    # 🔥 CHANGE: unique=True hata diya, db_index=False kar diya
+    employee_id = models.CharField(max_length=30, unique=False, db_index=False, blank=True, null=True)
     department = models.CharField(max_length=100)
     designation = models.CharField(max_length=50)
     availability_status = models.CharField(max_length=20, choices=AVAILABILITY, default='Available')
@@ -61,7 +63,7 @@ class Supervisor(models.Model):
         return f"Prof. {self.user.get_full_name()} - {self.department}"
 
 
-# ===== Examiner Model (Fixed email length) =====
+# ===== Examiner Model =====
 class Examiner(models.Model):
     EXAMINER_TYPE = (
         ('Internal', 'Internal'),
@@ -70,7 +72,8 @@ class Examiner(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='examiner_profile', null=True, blank=True)
     name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True, max_length=250)   # ← max_length reduced to 250
+    # 🔥 CHANGE: unique=True hata diya, db_index=False kar diya
+    email = models.EmailField(unique=False, db_index=False)
     phone_no = models.CharField(max_length=15)
     designation = models.CharField(max_length=50)
     examiner_type = models.CharField(max_length=20, choices=EXAMINER_TYPE)
@@ -82,7 +85,86 @@ class Examiner(models.Model):
         return f"{self.name} - {self.examiner_type}"
 
 
-# ===== Synopsis Model (Merged with versioning & review) =====
+# ===== ✅ NEW: Student Document Model =====
+class StudentDocument(models.Model):
+    DOCUMENT_TYPES = (
+        ('admission', 'Admission Letter'),
+        ('enrollment', 'Enrollment Letter'),
+    )
+    
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name='documents'
+    )
+    document_type = models.CharField(
+        max_length=20, 
+        choices=DOCUMENT_TYPES
+    )
+    title = models.CharField(
+        max_length=200,
+        help_text="e.g., Admission Letter 2026 or Enrollment Letter Spring 2026"
+    )
+    document = models.FileField(
+        upload_to='student_documents/',
+        validators=[FileExtensionValidator(['pdf'])],
+        help_text="Only PDF files allowed, max 5MB"
+    )
+    expiry_date = models.DateField(
+        null=True, 
+        blank=True,
+        help_text="Leave blank if no expiry date"
+    )
+    uploaded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='uploaded_documents'
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Uncheck to deactivate this document"
+    )
+    remarks = models.TextField(
+        blank=True, 
+        null=True,
+        help_text="Any additional notes about this document"
+    )
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = 'Student Document'
+        verbose_name_plural = 'Student Documents'
+
+    def __str__(self):
+        return f"{self.get_document_type_display()} - {self.student.user.get_full_name()} - {self.title}"
+    
+    def is_expired(self):
+        if self.expiry_date:
+            return self.expiry_date < timezone.now().date()
+        return False
+    
+    def get_file_size(self):
+        if self.document:
+            size = self.document.size
+            return f"{size / (1024 * 1024):.2f} MB"
+        return "N/A"
+    
+    def get_document_url(self):
+        if self.document:
+            return self.document.url
+        return None
+    
+    def get_status_display(self):
+        if not self.is_active:
+            return 'Inactive'
+        if self.is_expired():
+            return 'Expired'
+        return 'Active'
+
+
 class Synopsis(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -99,21 +181,24 @@ class Synopsis(models.Model):
     submission_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     
-    # Supervisor assigned (optional)
     supervisor = models.ForeignKey(Supervisor, on_delete=models.SET_NULL, null=True, blank=True, related_name='synopses')
-    
-    # Review fields
     reviewed_by = models.ForeignKey(Supervisor, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_synopses')
-    review_comments = models.TextField(blank=True, null=True)   # null=True add kiya
+    review_comments = models.TextField(blank=True, null=True)
     review_date = models.DateTimeField(null=True, blank=True)
-    
-    # Versioning
     version = models.IntegerField(default=1)
     previous_version = models.ForeignKey('Synopsis', on_delete=models.SET_NULL, null=True, blank=True)
-    
-    # Resubmission deadline (agar changes requested ho)
     resubmission_deadline = models.DateField(null=True, blank=True)
-
+    
+    # ✅ NEW: Admin who uploaded (if admin uploads on behalf of student)
+    uploaded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='uploaded_synopses'
+    )
+    is_admin_uploaded = models.BooleanField(default=False)
+    
     def __str__(self):
         return f"{self.title} - {self.student.user.get_full_name()}"
 
@@ -134,8 +219,6 @@ class ProgressReport(models.Model):
     status = models.CharField(max_length=20, choices=REPORT_STATUS, default='Submitted')
     supervisor_feedback = models.TextField(blank=True, null=True)
     submission_date = models.DateTimeField(auto_now_add=True)
-    
-    # New fields for review tracking
     reviewed_by = models.ForeignKey(
         'Supervisor', 
         on_delete=models.SET_NULL, 
@@ -149,7 +232,6 @@ class ProgressReport(models.Model):
         return f"Report {self.id} - {self.student.registration_no}"
 
 
-# ===== Thesis Model =====
 class Thesis(models.Model):
     THESIS_STATUS = (
         ('Submitted', 'Submitted'),
@@ -166,21 +248,29 @@ class Thesis(models.Model):
     status = models.CharField(max_length=25, choices=THESIS_STATUS, default='Submitted')
     submission_date = models.DateTimeField(auto_now_add=True)
     viva_result = models.CharField(max_length=30, blank=True, null=True)
-    
-    # New field to track final decision date
     final_decision_date = models.DateTimeField(null=True, blank=True)
+    
+    # ✅ NEW: Admin who uploaded (if admin uploads on behalf of student)
+    uploaded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='uploaded_theses'
+    )
+    is_admin_uploaded = models.BooleanField(default=False)
     
     def __str__(self):
         return f"{self.title} - {self.student.registration_no}"
 
 
-# ===== Thesis Evaluation (by examiners) =====
+# ===== Thesis Evaluation =====
 class ThesisEvaluation(models.Model):
     thesis = models.ForeignKey(Thesis, on_delete=models.CASCADE, related_name='evaluations')
     examiner = models.ForeignKey(Examiner, on_delete=models.CASCADE)
     evaluation_date = models.DateField(auto_now_add=True)
-    marks = models.IntegerField(null=True, blank=True)  # ← null allowed
-    result = models.CharField(max_length=20, blank=True, null=True)  # ← blank allowed
+    marks = models.IntegerField(null=True, blank=True)
+    result = models.CharField(max_length=20, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     report_file = models.FileField(upload_to='research/evaluation_reports/', blank=True, null=True)
     submitted = models.BooleanField(default=False)
@@ -191,7 +281,6 @@ class ThesisEvaluation(models.Model):
         return f"Evaluation for {self.thesis.title}"
 
 
-# ===== Meeting Model =====
 class Meeting(models.Model):
     MEETING_MODE = (
         ('Online', 'Online'),
@@ -206,6 +295,16 @@ class Meeting(models.Model):
     summary = models.TextField(blank=True, null=True)
     minutes_file = models.FileField(upload_to='research/meetings/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # ✅ NEW: Admin who created
+    created_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='created_meetings'
+    )
+    is_admin_created = models.BooleanField(default=False)
     
     def __str__(self):
         return f"Meeting: {self.student} with {self.supervisor} on {self.meeting_date}"
@@ -226,13 +325,12 @@ class ExtensionCase(models.Model):
     supporting_document = models.FileField(upload_to='research/extensions/', blank=True, null=True)
     request_date = models.DateTimeField(auto_now_add=True)
     approval_date = models.DateField(blank=True, null=True)
-    remarks = models.TextField(blank=True, null=True)   # supervisor's remarks when rejecting/approving
+    remarks = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"Extension for {self.student.registration_no}"
 
 
-# ===== Degree Letter Model =====
 class DegreeLetter(models.Model):
     VERIFICATION_STATUS = (
         ('Pending', 'Pending Verification'),
@@ -248,6 +346,17 @@ class DegreeLetter(models.Model):
     letter_file = models.FileField(upload_to='degree_letters/', blank=True, null=True)
     verified_by = models.ForeignKey(Supervisor, on_delete=models.SET_NULL, null=True, blank=True)
     remarks = models.TextField(blank=True, null=True)
+    
+    # ✅ NEW: Admin who uploaded
+    uploaded_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='uploaded_degree_letters'
+    )
+    is_admin_uploaded = models.BooleanField(default=False)
+    title = models.CharField(max_length=200, blank=True, null=True)  # Degree title
     
     def __str__(self):
         return f"Degree Letter for {self.student.registration_no}"

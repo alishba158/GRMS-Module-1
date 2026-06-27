@@ -17,30 +17,41 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 import openpyxl
-
+# Email utilities import
+from .utils import send_email_async, get_full_url
 # Import forms (including extension forms and degree letter form)
 from .forms import (
     SynopsisSubmitForm, SynopsisReviewForm,
     ProgressReportSubmitForm, ProgressReportReviewForm,
     ThesisAssignmentForm, ExaminerReportForm, VivaResultForm,
     ExtensionRequestForm, ExtensionReviewForm,
-    DegreeLetterVerificationForm   # ← ADDED
-)
+    DegreeLetterVerificationForm,
+    StudentDocumentForm, AdminSynopsisUploadForm,AdminThesisUploadForm,  AdminDegreeLetterUploadForm, AdminMeetingForm
+    )
 
 print("✅ views.py loaded successfully")
 
 from .models import (
     Student, Supervisor, Synopsis, Thesis, ProgressReport,
     Meeting, ExtensionCase, DegreeLetter, Notification, Examiner,
-    ThesisEvaluation
+    ThesisEvaluation, StudentDocument  # ✅ ADDED
 )
 
 
 # ======================
-# ADMIN CHECK (defined early for decorators)
+# HELPER FUNCTIONS
 # ======================
 def is_admin(user):
     return user.is_superuser or user.groups.filter(name='Admin').exists()
+
+def is_supervisor(user):
+    return hasattr(user, 'supervisor_profile')
+
+def is_student(user):
+    return hasattr(user, 'student_profile')
+
+def is_examiner(user):
+    return hasattr(user, 'examiner_profile')
 
 
 # =================================================
@@ -344,48 +355,75 @@ def logout_view(request):
 # =================================================
 # ADMIN DASHBOARD
 # =================================================
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from accounts.models import Student, Supervisor, Synopsis, Thesis, Notification
+
 @login_required
-@user_passes_test(is_admin)
 def admin_dashboard(request):
-    total_students = Student.objects.count()
-    active_students = Student.objects.filter(user__is_active=True).count()
+    # Only allow admin access
+    if not request.user.is_staff and not request.user.is_superuser:
+        return redirect('login')
+    
+    # Get all students
+    students = Student.objects.all()
+    
+    # Get unique departments
+    departments = students.values_list('department', flat=True).distinct()
+    
+    # Handle department filter
+    selected_dept = request.GET.get('department', '')
+    if selected_dept:
+        filtered_students = students.filter(department=selected_dept)
+    else:
+        filtered_students = students
+    
+    # Check if AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        students_data = []
+        for student in filtered_students:
+            students_data.append({
+                'registration_no': student.registration_no,
+                'name': student.user.get_full_name(),
+                'department': student.department,
+                'program': student.program,
+                'session': student.session,
+                'supervisor': student.supervisor.user.get_full_name() if student.supervisor else 'Not Assigned',
+                'enrollment_status': student.enrollment_status,
+            })
+        return JsonResponse({
+            'students': students_data,
+            'total': filtered_students.count()
+        })
+    
+    # Safe supervisor counts
     total_supervisors = Supervisor.objects.count()
-    available_supervisors = Supervisor.objects.filter(availability_status='Available').count()
-    pending_synopses = Synopsis.objects.filter(status='Pending').count()
-    pending_theses = Thesis.objects.filter(status='Under Review').count()
-    pending_extensions = ExtensionCase.objects.filter(status='Pending').count()
     
-    # Urgent extensions (pending > 7 days)
-    urgent_extensions = ExtensionCase.objects.filter(
-        status='Pending',
-        request_date__lte=timezone.now() - datetime.timedelta(days=7)
-    ).count()
+    try:
+        available_supervisors = Supervisor.objects.filter(availability_status='Available').count()
+    except:
+        available_supervisors = 0
     
-    recent_students = Student.objects.select_related('user').order_by('-admission_date')[:5]
-    recent_synopses = Synopsis.objects.select_related('student').order_by('-submission_date')[:5]
-    recent_theses = Thesis.objects.select_related('student').order_by('-submission_date')[:5]
-    recent_extensions = ExtensionCase.objects.select_related('student').order_by('-request_date')[:5]
-    
-    # Notifications for admin
-    unread_notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
-    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
-    
+    # Regular request - return full page
     context = {
-        'total_students': total_students,
-        'active_students': active_students,
+        'total_students': students.count(),
+        'active_students': students.filter(enrollment_status='Active').count(),
         'total_supervisors': total_supervisors,
         'available_supervisors': available_supervisors,
-        'pending_synopses': pending_synopses,
-        'pending_theses': pending_theses,
-        'pending_extensions': pending_extensions,
-        'urgent_extensions': urgent_extensions,
-        'recent_students': recent_students,
-        'recent_synopses': recent_synopses,
-        'recent_theses': recent_theses,
-        'recent_extensions': recent_extensions,
-        'unread_notifications': unread_notifications,
-        'unread_count': unread_count,
+        'pending_synopses': Synopsis.objects.filter(status='pending').count(),
+        'pending_synopses_submitted': Synopsis.objects.filter(status='submitted').count(),
+        'pending_synopses_review': Synopsis.objects.filter(status='under_review').count(),
+        'pending_theses': Thesis.objects.filter(status='Submitted').count(),
+        'pending_extensions': 0,
+        'urgent_extensions': 0,
+        'pending_degree_requests': 0,
+        'unread_count': Notification.objects.filter(user=request.user, is_read=False).count(),
+        'departments': departments,
+        'filtered_students': filtered_students,
+        'selected_dept': selected_dept,
     }
+    
     return render(request, 'admin/dashboard.html', context)
 
 
@@ -437,51 +475,92 @@ def supervisor_dashboard(request):
     try:
         supervisor = Supervisor.objects.get(user=request.user)
     except Supervisor.DoesNotExist:
-        messages.error(request, "Supervisor profile not found.")
-        return redirect("home")
+        return redirect('admin_dashboard')
     
-    # Assigned students
-    assigned_students = Student.objects.filter(supervisor=supervisor)
-    student_ids = assigned_students.values_list('id', flat=True)
+    students = Student.objects.filter(supervisor=supervisor)
+    supervisor_departments = students.values_list('department', flat=True).distinct()
     
-    # Stats
-    total_students = assigned_students.count()
-    pending_synopses = Synopsis.objects.filter(supervisor=supervisor, status='Pending').count()
-    pending_theses = Thesis.objects.filter(student__supervisor=supervisor, status='Under Review').count()
-    pending_reports = ProgressReport.objects.filter(student_id__in=student_ids, status='Submitted').count()
-    pending_extensions = ExtensionCase.objects.filter(student_id__in=student_ids, status='Pending').count()
+    selected_dept = request.GET.get('dept_filter', '')
+    if selected_dept:
+        filtered_students = students.filter(department=selected_dept)
+    else:
+        filtered_students = students
     
-    # Upcoming meetings
-    upcoming_meetings = Meeting.objects.filter(
-        supervisor=supervisor,
-        meeting_date__gte=timezone.now()
-    ).order_by('meeting_date')[:5]
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        students_data = []
+        for student in filtered_students:
+            students_data.append({
+                'registration_no': student.registration_no,
+                'name': student.user.get_full_name(),
+                'department': student.department,
+                'program': student.program,
+                'session': student.session,
+                'enrollment_status': student.enrollment_status,
+            })
+        return JsonResponse({
+            'students': students_data,
+            'total': filtered_students.count()
+        })
     
-    # Recent items
-    recent_synopses = Synopsis.objects.filter(supervisor=supervisor).order_by('-submission_date')[:5]
-    recent_theses = Thesis.objects.filter(student__supervisor=supervisor).order_by('-submission_date')[:5]
-    recent_meetings = Meeting.objects.filter(supervisor=supervisor).order_by('-meeting_date')[:5]
-    recent_extensions = ExtensionCase.objects.filter(student_id__in=student_ids).order_by('-request_date')[:5]
+    try:
+        pending_synopses_count = Synopsis.objects.filter(student__supervisor=supervisor, status='submitted').count()
+    except:
+        pending_synopses_count = 0
     
-    # Notifications
-    unread_notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
-    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    try:
+        pending_theses_count = Thesis.objects.filter(student__supervisor=supervisor, status='Submitted').count()
+    except:
+        pending_theses_count = 0
+    
+    try:
+        pending_reports_count = ProgressReport.objects.filter(student__supervisor=supervisor, status='Submitted').count()
+    except:
+        pending_reports_count = 0
+    
+    try:
+        recent_synopses = Synopsis.objects.filter(student__supervisor=supervisor).order_by('-submitted_at')[:5]
+    except:
+        recent_synopses = []
+    
+    try:
+        unread_notifications = Notification.objects.filter(user=request.user, is_read=False)[:5]
+        unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    except:
+        unread_notifications = []
+        unread_count = 0
+    
+    try:
+        upcoming_meetings = Meeting.objects.filter(student__supervisor=supervisor, meeting_date__gte=timezone.now()).order_by('meeting_date')[:5]
+    except:
+        upcoming_meetings = []
+    
+    try:
+        recent_extensions = ExtensionCase.objects.filter(student__supervisor=supervisor, status='Pending').order_by('-request_date')[:5]
+    except:
+        recent_extensions = []
+    
+    try:
+        recent_theses = Thesis.objects.filter(student__supervisor=supervisor).order_by('-submission_date')[:5]
+    except:
+        recent_theses = []
     
     context = {
         'supervisor': supervisor,
-        'total_students': total_students,
-        'pending_synopses': pending_synopses,
-        'pending_theses': pending_theses,
-        'pending_reports': pending_reports,
-        'pending_extensions': pending_extensions,
-        'upcoming_meetings': upcoming_meetings,
+        'total_students': students.count(),
+        'pending_synopses': pending_synopses_count,
+        'pending_theses': pending_theses_count,
+        'pending_reports': pending_reports_count,
         'recent_synopses': recent_synopses,
-        'recent_theses': recent_theses,
-        'recent_meetings': recent_meetings,
-        'recent_extensions': recent_extensions,
         'unread_notifications': unread_notifications,
         'unread_count': unread_count,
+        'upcoming_meetings': upcoming_meetings,
+        'recent_extensions': recent_extensions,
+        'recent_theses': recent_theses,
+        'supervisor_departments': supervisor_departments,
+        'supervisor_filtered_students': filtered_students,
+        'selected_supervisor_dept': selected_dept,
     }
+    
     return render(request, 'supervisor/dashboard.html', context)
 
 
@@ -738,7 +817,6 @@ def supervisor_extension_review(request, pk):
             if ext.status in ['Approved', 'Rejected']:
                 ext.approval_date = timezone.now().date()
             ext.save()
-            # Notify student
             Notification.objects.create(
                 user=extension.student.user,
                 notification_type='System',
@@ -794,7 +872,7 @@ def supervisor_change_password(request):
 
 
 # =================================================
-# STUDENT DASHBOARD (ENHANCED)
+# STUDENT DASHBOARD
 # =================================================
 @login_required
 def student_dashboard(request):
@@ -927,6 +1005,18 @@ def student_synopsis_submit(request):
                     message=f"{student.user.get_full_name()} has submitted a synopsis: {synopsis.title}",
                     link=f"/supervisor/synopsis/{synopsis.id}/"
                 )
+                subject = f"📄 New Synopsis Submitted - {synopsis.title}"
+                message = f"""
+Student {student.user.get_full_name()} (Registration: {student.registration_no}) 
+has submitted a new synopsis.
+
+Title: {synopsis.title}
+Submitted: {timezone.now().strftime('%B %d, %Y at %I:%M %p')}
+
+Please login to GRMS to review it.
+                """
+                link = get_full_url(request, f'/supervisor/synopsis/{synopsis.id}/')
+                send_email_async(student.supervisor.user, subject, message, link)
             messages.success(request, "Synopsis submitted successfully!")
             return redirect('student_synopsis_list')
     else:
@@ -1036,7 +1126,6 @@ def student_progress_list(request):
     return render(request, 'student/progress/list.html', {'reports': reports})
 
 
-# ========== UPDATED STUDENT PROGRESS CREATE VIEW (using form) ==========
 @login_required
 def student_progress_create(request):
     student = get_object_or_404(Student, user=request.user)
@@ -1047,7 +1136,6 @@ def student_progress_create(request):
             report.student = student
             report.status = 'Submitted'
             report.save()
-            # Notify supervisor
             if student.supervisor:
                 Notification.objects.create(
                     user=student.supervisor.user,
@@ -1104,7 +1192,6 @@ def student_extension_create(request):
             extension = form.save(commit=False)
             extension.student = student
             extension.save()
-            # Notify supervisor
             if student.supervisor:
                 Notification.objects.create(
                     user=student.supervisor.user,
@@ -1137,7 +1224,6 @@ def student_degree_request(request):
             messages.info(request, 'You have already requested a degree letter.')
         else:
             degree = DegreeLetter.objects.create(student=student, verification_status='Pending')
-            # Notify admin
             admin_users = User.objects.filter(is_superuser=True)
             for admin in admin_users:
                 Notification.objects.create(
@@ -1397,9 +1483,101 @@ def admin_supervisor_delete(request, pk):
     return render(request, 'admin/supervisor/delete.html', {'supervisor': supervisor})
 
 
+# ===== ADMIN EXAMINER MANAGEMENT =====
+@login_required
+@user_passes_test(is_admin)
+def admin_examiner_list(request):
+    examiners = Examiner.objects.select_related('user').all()
+    return render(request, 'admin/examiner/list.html', {'examiners': examiners})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_examiner_create(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists')
+            return redirect('admin_examiner_create')
+        
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        group, _ = Group.objects.get_or_create(name='Examiner')
+        user.groups.add(group)
+        user.is_staff = True
+        user.save()
+        
+        examiner = Examiner.objects.create(
+            user=user,
+            name=f"{first_name} {last_name}",
+            email=email,
+            phone_no=request.POST.get('phone_no', ''),
+            designation=request.POST.get('designation'),
+            examiner_type=request.POST.get('examiner_type'),
+            institution=request.POST.get('institution'),
+            area_of_expertise=request.POST.get('area_of_expertise'),
+            availability_status=request.POST.get('availability_status', 'Available')
+        )
+        messages.success(request, f'Examiner {examiner.name} created successfully!')
+        return redirect('admin_examiner_list')
+    
+    return render(request, 'admin/examiner/create.html')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_examiner_detail(request, pk):
+    examiner = get_object_or_404(Examiner, pk=pk)
+    return render(request, 'admin/examiner/detail.html', {'examiner': examiner})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_examiner_update(request, pk):
+    examiner = get_object_or_404(Examiner, pk=pk)
+    if request.method == 'POST':
+        examiner.name = request.POST.get('name', examiner.name)
+        examiner.email = request.POST.get('email', examiner.email)
+        examiner.phone_no = request.POST.get('phone_no', examiner.phone_no)
+        examiner.designation = request.POST.get('designation', examiner.designation)
+        examiner.examiner_type = request.POST.get('examiner_type', examiner.examiner_type)
+        examiner.institution = request.POST.get('institution', examiner.institution)
+        examiner.area_of_expertise = request.POST.get('area_of_expertise', examiner.area_of_expertise)
+        examiner.availability_status = request.POST.get('availability_status', examiner.availability_status)
+        examiner.save()
+        messages.success(request, 'Examiner updated successfully!')
+        return redirect('admin_examiner_list')
+    
+    return render(request, 'admin/examiner/update.html', {'examiner': examiner})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_examiner_delete(request, pk):
+    examiner = get_object_or_404(Examiner, pk=pk)
+    if request.method == 'POST':
+        user = examiner.user
+        examiner.delete()
+        user.delete()
+        messages.success(request, 'Examiner deleted successfully!')
+        return redirect('admin_examiner_list')
+    return render(request, 'admin/examiner/delete.html', {'examiner': examiner})
+
+
 # =================================================
-# ADMIN SYNOPSIS MANAGEMENT
+# ADMIN SYNOPSIS MANAGEMENT (ENHANCED)
 # =================================================
+
 @login_required
 @user_passes_test(is_admin)
 def admin_synopsis_list(request):
@@ -1412,6 +1590,66 @@ def admin_synopsis_list(request):
 def admin_synopsis_detail(request, pk):
     synopsis = get_object_or_404(Synopsis, pk=pk)
     return render(request, 'admin/synopsis/detail.html', {'synopsis': synopsis})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_synopsis_upload(request):
+    """Admin upload synopsis on behalf of student"""
+    if request.method == 'POST':
+        form = AdminSynopsisUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            synopsis = form.save(commit=False)
+            synopsis.uploaded_by = request.user
+            synopsis.is_admin_uploaded = True
+            synopsis.submission_date = timezone.now()
+            synopsis.save()
+            messages.success(request, f"✅ Synopsis uploaded successfully for {synopsis.student.user.get_full_name()}!")
+            return redirect('admin_synopsis_list')
+        else:
+            messages.error(request, "❌ Please fix the errors below.")
+    else:
+        form = AdminSynopsisUploadForm()
+    
+    return render(request, 'admin/synopsis/upload.html', {'form': form})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_synopsis_download(request, pk):
+    """Admin download synopsis"""
+    synopsis = get_object_or_404(Synopsis, pk=pk)
+    if synopsis.document:
+        response = HttpResponse(synopsis.document, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{synopsis.document.name}"'
+        return response
+    messages.error(request, "❌ Document not found!")
+    return redirect('admin_synopsis_list')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_synopsis_view_pdf(request, pk):
+    """Admin view synopsis PDF"""
+    synopsis = get_object_or_404(Synopsis, pk=pk)
+    if synopsis.document:
+        return redirect(synopsis.document.url)
+    messages.error(request, "❌ Document not found!")
+    return redirect('admin_synopsis_list')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_synopsis_delete_confirm(request, pk):
+    """Admin delete synopsis"""
+    synopsis = get_object_or_404(Synopsis, pk=pk)
+    if request.method == 'POST':
+        if synopsis.document:
+            synopsis.document.delete()
+        synopsis.delete()
+        messages.success(request, "🗑️ Synopsis deleted successfully!")
+        return redirect('admin_synopsis_list')
+    return render(request, 'admin/synopsis/delete_confirm.html', {'synopsis': synopsis})
 
 
 @login_required
@@ -1454,13 +1692,14 @@ def admin_synopsis_reject(request, pk):
         return redirect('admin_synopsis_list')
     return redirect('admin_synopsis_detail', pk=pk)
 
+# =================================================
+# ADMIN THESIS MANAGEMENT (ENHANCED)
+# =================================================
 
-# =================================================
-# ADMIN THESIS MANAGEMENT
-# =================================================
 @login_required
 @user_passes_test(is_admin)
 def admin_thesis_list(request):
+    """Admin view all theses"""
     theses = Thesis.objects.select_related('student').all().order_by('-submission_date')
     return render(request, 'admin/thesis/list.html', {'theses': theses})
 
@@ -1468,6 +1707,7 @@ def admin_thesis_list(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_thesis_detail(request, pk):
+    """Admin view thesis details"""
     thesis = get_object_or_404(Thesis, pk=pk)
     evaluations = thesis.evaluations.all()
     context = {
@@ -1479,7 +1719,82 @@ def admin_thesis_detail(request, pk):
 
 @login_required
 @user_passes_test(is_admin)
+def admin_thesis_upload(request):
+    """Admin upload thesis on behalf of student"""
+    if request.method == 'POST':
+        form = AdminThesisUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            thesis = form.save(commit=False)
+            thesis.uploaded_by = request.user
+            thesis.is_admin_uploaded = True
+            thesis.submission_date = timezone.now()
+            thesis.save()
+            messages.success(request, f"✅ Thesis uploaded successfully for {thesis.student.user.get_full_name()}!")
+            return redirect('admin_thesis_list')
+        else:
+            messages.error(request, "❌ Please fix the errors below.")
+    else:
+        form = AdminThesisUploadForm()
+    
+    return render(request, 'admin/thesis/upload.html', {'form': form})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_thesis_download(request, pk):
+    """Admin download thesis"""
+    thesis = get_object_or_404(Thesis, pk=pk)
+    if thesis.file:
+        response = HttpResponse(thesis.file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{thesis.file.name}"'
+        return response
+    messages.error(request, "❌ Document not found!")
+    return redirect('admin_thesis_list')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_thesis_view_pdf(request, pk):
+    """Admin view thesis PDF"""
+    thesis = get_object_or_404(Thesis, pk=pk)
+    if thesis.file:
+        return redirect(thesis.file.url)
+    messages.error(request, "❌ Document not found!")
+    return redirect('admin_thesis_list')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_thesis_delete_confirm(request, pk):
+    """Admin delete thesis"""
+    thesis = get_object_or_404(Thesis, pk=pk)
+    if request.method == 'POST':
+        if thesis.file:
+            thesis.file.delete()
+        thesis.delete()
+        messages.success(request, "🗑️ Thesis deleted successfully!")
+        return redirect('admin_thesis_list')
+    return render(request, 'admin/thesis/delete_confirm.html', {'thesis': thesis})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_thesis_update_status(request, pk):
+    """Admin update thesis status"""
+    thesis = get_object_or_404(Thesis, pk=pk)
+    if request.method == 'POST':
+        thesis.status = request.POST.get('status', thesis.status)
+        thesis.remarks = request.POST.get('remarks', '')
+        thesis.save()
+        messages.success(request, 'Thesis status updated!')
+        return redirect('admin_thesis_list')
+    return redirect('admin_thesis_detail', pk=pk)
+
+
+@login_required
+@user_passes_test(is_admin)
 def admin_thesis_assign_examiners(request, pk):
+    """Admin assigns examiners to thesis"""
     thesis = get_object_or_404(Thesis, pk=pk)
     if request.method == 'POST':
         form = ThesisAssignmentForm(request.POST, thesis=thesis)
@@ -1500,6 +1815,7 @@ def admin_thesis_assign_examiners(request, pk):
 @login_required
 @user_passes_test(is_admin)
 def admin_thesis_record_viva(request, pk):
+    """Admin records viva result"""
     thesis = get_object_or_404(Thesis, pk=pk)
     if request.method == 'POST':
         form = VivaResultForm(request.POST, instance=thesis)
@@ -1518,6 +1834,7 @@ def admin_thesis_record_viva(request, pk):
 @login_required
 @user_passes_test(is_admin)
 def admin_thesis_finalize(request, pk):
+    """Admin finalizes thesis"""
     thesis = get_object_or_404(Thesis, pk=pk)
     if request.method == 'POST':
         new_status = request.POST.get('status')
@@ -1525,7 +1842,6 @@ def admin_thesis_finalize(request, pk):
             thesis.status = new_status
             thesis.final_decision_date = timezone.now()
             thesis.save()
-            # Notify student
             Notification.objects.create(
                 user=thesis.student.user,
                 notification_type='System',
@@ -1535,19 +1851,6 @@ def admin_thesis_finalize(request, pk):
             messages.success(request, f"Thesis {new_status}.")
         return redirect('admin_thesis_detail', pk=thesis.id)
     return render(request, 'admin/thesis/finalize.html', {'thesis': thesis})
-
-
-@login_required
-@user_passes_test(is_admin)
-def admin_thesis_update_status(request, pk):
-    thesis = get_object_or_404(Thesis, pk=pk)
-    if request.method == 'POST':
-        thesis.status = request.POST.get('status', thesis.status)
-        thesis.remarks = request.POST.get('remarks', '')
-        thesis.save()
-        messages.success(request, 'Thesis status updated!')
-        return redirect('admin_thesis_list')
-    return redirect('admin_thesis_detail', pk=pk)
 
 
 # =================================================
@@ -1568,20 +1871,93 @@ def admin_progress_detail(request, pk):
 
 
 # =================================================
-# ADMIN MEETINGS MANAGEMENT
+# ADMIN MEETING MANAGEMENT (ENHANCED)
 # =================================================
+
 @login_required
 @user_passes_test(is_admin)
 def admin_meeting_list(request):
-    meetings = Meeting.objects.select_related('student', 'supervisor').all().order_by('-meeting_date')
+    """Admin view all meetings"""
+    meetings = Meeting.objects.select_related('student', 'student__user', 'supervisor', 'supervisor__user').order_by('-meeting_date')
     return render(request, 'admin/meeting/list.html', {'meetings': meetings})
 
 
 @login_required
 @user_passes_test(is_admin)
 def admin_meeting_detail(request, pk):
+    """Admin view meeting details"""
     meeting = get_object_or_404(Meeting, pk=pk)
     return render(request, 'admin/meeting/detail.html', {'meeting': meeting})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_meeting_create(request):
+    """Admin create meeting for student and supervisor"""
+    if request.method == 'POST':
+        form = AdminMeetingForm(request.POST)
+        if form.is_valid():
+            meeting = form.save(commit=False)
+            meeting.created_by = request.user
+            meeting.is_admin_created = True
+            meeting.save()
+            
+            # Notify student
+            Notification.objects.create(
+                user=meeting.student.user,
+                notification_type='System',
+                message=f"📅 New meeting scheduled with {meeting.supervisor.user.get_full_name()} on {meeting.meeting_date.strftime('%b %d, %Y at %I:%M %p')}",
+                link=f"/student/meetings/{meeting.id}/"
+            )
+            
+            # Notify supervisor
+            Notification.objects.create(
+                user=meeting.supervisor.user,
+                notification_type='System',
+                message=f"📅 New meeting scheduled with {meeting.student.user.get_full_name()} on {meeting.meeting_date.strftime('%b %d, %Y at %I:%M %p')}",
+                link=f"/supervisor/meetings/{meeting.id}/"
+            )
+            
+            messages.success(request, f"✅ Meeting scheduled successfully for {meeting.student.user.get_full_name()}!")
+            return redirect('admin_meeting_list')
+        else:
+            messages.error(request, "❌ Please fix the errors below.")
+    else:
+        form = AdminMeetingForm()
+        student_id = request.GET.get('student')
+        if student_id:
+            form.fields['student'].initial = student_id
+    
+    return render(request, 'admin/meeting/create.html', {'form': form})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_meeting_edit(request, pk):
+    """Admin edit meeting"""
+    meeting = get_object_or_404(Meeting, pk=pk)
+    if request.method == 'POST':
+        form = AdminMeetingForm(request.POST, instance=meeting)
+        if form.is_valid():
+            meeting = form.save()
+            messages.success(request, "✅ Meeting updated successfully!")
+            return redirect('admin_meeting_list')
+    else:
+        form = AdminMeetingForm(instance=meeting)
+    
+    return render(request, 'admin/meeting/edit.html', {'form': form, 'meeting': meeting})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_meeting_delete_confirm(request, pk):
+    """Admin delete meeting"""
+    meeting = get_object_or_404(Meeting, pk=pk)
+    if request.method == 'POST':
+        meeting.delete()
+        messages.success(request, "🗑️ Meeting deleted successfully!")
+        return redirect('admin_meeting_list')
+    return render(request, 'admin/meeting/delete_confirm.html', {'meeting': meeting})
 
 
 # =================================================
@@ -1629,12 +2005,13 @@ def admin_extension_reject(request, pk):
 
 
 # =================================================
-# ADMIN DEGREE LETTER MANAGEMENT (NEW)
+# ADMIN DEGREE LETTER MANAGEMENT (ENHANCED)
 # =================================================
 
 @login_required
 @user_passes_test(is_admin)
 def admin_degree_list(request):
+    """Admin view all degree letters"""
     degrees = DegreeLetter.objects.select_related('student', 'student__user').order_by('-request_date')
     return render(request, 'admin/degree/list.html', {'degrees': degrees})
 
@@ -1642,13 +2019,75 @@ def admin_degree_list(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_degree_detail(request, pk):
+    """Admin view degree letter details"""
     degree = get_object_or_404(DegreeLetter, pk=pk)
     return render(request, 'admin/degree/detail.html', {'degree': degree})
 
 
 @login_required
 @user_passes_test(is_admin)
+def admin_degree_upload(request):
+    """Admin upload degree letter on behalf of student"""
+    if request.method == 'POST':
+        form = AdminDegreeLetterUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            degree = form.save(commit=False)
+            degree.uploaded_by = request.user
+            degree.is_admin_uploaded = True
+            degree.request_date = timezone.now()
+            degree.save()
+            messages.success(request, f"✅ Degree letter uploaded successfully for {degree.student.user.get_full_name()}!")
+            return redirect('admin_degree_list')
+        else:
+            messages.error(request, "❌ Please fix the errors below.")
+    else:
+        form = AdminDegreeLetterUploadForm()
+    
+    return render(request, 'admin/degree/upload.html', {'form': form})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_degree_download(request, pk):
+    """Admin download degree letter"""
+    degree = get_object_or_404(DegreeLetter, pk=pk)
+    if degree.letter_file:
+        response = HttpResponse(degree.letter_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{degree.letter_file.name}"'
+        return response
+    messages.error(request, "❌ Document not found!")
+    return redirect('admin_degree_list')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_degree_view_pdf(request, pk):
+    """Admin view degree letter PDF"""
+    degree = get_object_or_404(DegreeLetter, pk=pk)
+    if degree.letter_file:
+        return redirect(degree.letter_file.url)
+    messages.error(request, "❌ Document not found!")
+    return redirect('admin_degree_list')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_degree_delete_confirm(request, pk):
+    """Admin delete degree letter"""
+    degree = get_object_or_404(DegreeLetter, pk=pk)
+    if request.method == 'POST':
+        if degree.letter_file:
+            degree.letter_file.delete()
+        degree.delete()
+        messages.success(request, "🗑️ Degree letter deleted successfully!")
+        return redirect('admin_degree_list')
+    return render(request, 'admin/degree/delete_confirm.html', {'degree': degree})
+
+
+@login_required
+@user_passes_test(is_admin)
 def admin_degree_verify(request, pk):
+    """Admin verify degree letter"""
     degree = get_object_or_404(DegreeLetter, pk=pk)
     if request.method == 'POST':
         form = DegreeLetterVerificationForm(request.POST, instance=degree)
@@ -1656,7 +2095,6 @@ def admin_degree_verify(request, pk):
             degree = form.save(commit=False)
             degree.verified_by = request.user.supervisor_profile if hasattr(request.user, 'supervisor_profile') else None
             degree.save()
-            # Notify student
             Notification.objects.create(
                 user=degree.student.user,
                 notification_type='System',
@@ -1670,17 +2108,10 @@ def admin_degree_verify(request, pk):
     return render(request, 'admin/degree/verify.html', {'form': form, 'degree': degree})
 
 
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import inch
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib import colors
-import io
-
 @login_required
 @user_passes_test(is_admin)
 def admin_degree_issue(request, pk):
+    """Admin issue degree letter"""
     degree = get_object_or_404(DegreeLetter, pk=pk)
     if degree.verification_status != 'Verified':
         messages.error(request, "Only verified requests can be issued.")
@@ -1692,18 +2123,15 @@ def admin_degree_issue(request, pk):
     styles = getSampleStyleSheet()
     elements = []
 
-    # Title
     title_style = styles['Title']
-    title_style.alignment = 1  # center
+    title_style.alignment = 1
     elements.append(Paragraph("DEGREE COMPLETION LETTER", title_style))
     elements.append(Spacer(1, 0.5*inch))
 
-    # Date
     from datetime import date
     elements.append(Paragraph(f"Date: {date.today().strftime('%B %d, %Y')}", styles['Normal']))
     elements.append(Spacer(1, 0.3*inch))
 
-    # Student details
     student = degree.student
     data = [
         ["Student Name:", student.user.get_full_name()],
@@ -1711,7 +2139,7 @@ def admin_degree_issue(request, pk):
         ["Program:", student.program],
         ["Department:", student.department],
         ["Session:", student.session],
-        ["CGPA / Result:", "3.8 / 4.0 (Example)"],  # TODO: Fetch actual data if available
+        ["CGPA / Result:", "3.8 / 4.0 (Example)"],
     ]
     table = Table(data, colWidths=[1.5*inch, 4*inch])
     table.setStyle(TableStyle([
@@ -1722,7 +2150,6 @@ def admin_degree_issue(request, pk):
     elements.append(table)
     elements.append(Spacer(1, 0.3*inch))
 
-    # Body
     body_text = f"""
     This is to certify that <b>{student.user.get_full_name()}</b> has successfully completed all requirements
     for the degree of <b>{student.program}</b> in <b>{student.department}</b> during the session <b>{student.session}</b>.
@@ -1731,7 +2158,6 @@ def admin_degree_issue(request, pk):
     elements.append(Paragraph(body_text, styles['Normal']))
     elements.append(Spacer(1, 0.5*inch))
 
-    # Signatures
     sig_data = [
         ["______________________", "______________________"],
         ["Dean / Head of Department", "Registrar"]
@@ -1746,7 +2172,6 @@ def admin_degree_issue(request, pk):
     pdf = buffer.getvalue()
     buffer.close()
 
-    # Save the PDF file to model
     from django.core.files.base import ContentFile
     filename = f"degree_{student.registration_no}.pdf"
     degree.letter_file.save(filename, ContentFile(pdf))
@@ -1754,7 +2179,6 @@ def admin_degree_issue(request, pk):
     degree.verification_status = 'Issued'
     degree.save()
 
-    # Notify student
     Notification.objects.create(
         user=degree.student.user,
         notification_type='System',
@@ -1810,7 +2234,6 @@ def examiner_evaluation_submit(request, pk):
             evaluation.submitted = True
             evaluation.submitted_at = timezone.now()
             evaluation.save()
-            # Notify admin
             admin_users = User.objects.filter(is_superuser=True)
             for admin in admin_users:
                 Notification.objects.create(
@@ -1912,3 +2335,116 @@ def supervisor_progress_detail(request, pk):
         return redirect('supervisor_dashboard')
     
     return render(request, 'supervisor/progress/detail.html', {'report': report})
+
+
+# =================================================
+# ========== STUDENT DOCUMENT VIEWS (FINAL - WITHOUT TRY-EXCEPT) ==========
+# =================================================
+
+# ===== ADMIN VIEWS =====
+
+@login_required
+@user_passes_test(is_admin)
+def admin_document_list(request):
+    """Show all documents with filters"""
+    documents = StudentDocument.objects.select_related('student', 'student__user', 'uploaded_by').order_by('-uploaded_at')
+    
+    # Get filter parameters
+    doc_type = request.GET.get('type', '')
+    student_id = request.GET.get('student', '')
+    status = request.GET.get('status', '')
+    
+    # Apply filters
+    if doc_type:
+        documents = documents.filter(document_type=doc_type)
+    if student_id:
+        documents = documents.filter(student_id=student_id)
+    if status == 'active':
+        documents = documents.filter(is_active=True)
+    elif status == 'expired':
+        documents = documents.filter(expiry_date__lt=timezone.now().date())
+    
+    # Get all students for filter dropdown
+    students = Student.objects.select_related('user').all()
+    
+    context = {
+        'documents': documents,
+        'students': students,
+        'doc_type': doc_type,
+        'student_id': student_id,
+        'status': status,
+    }
+    return render(request, 'admin/documents/list.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_document_upload(request):
+    """Upload new document"""
+    if request.method == 'POST':
+        form = StudentDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            doc = form.save(commit=False)
+            doc.uploaded_by = request.user
+            doc.save()
+            messages.success(request, f"✅ {doc.get_document_type_display()} uploaded successfully!")
+            return redirect('admin_document_list')
+        else:
+            messages.error(request, "❌ Please fix the errors below.")
+    else:
+        form = StudentDocumentForm()
+    
+    return render(request, 'admin/documents/upload.html', {'form': form})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_document_detail(request, pk):
+    """View document details"""
+    doc = get_object_or_404(StudentDocument, pk=pk)
+    return render(request, 'admin/documents/detail.html', {'doc': doc})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_document_delete(request, pk):
+    """Delete document"""
+    doc = get_object_or_404(StudentDocument, pk=pk)
+    if request.method == 'POST':
+        if doc.document:
+            doc.document.delete()
+        doc.delete()
+        messages.success(request, "🗑️ Document deleted successfully!")
+        return redirect('admin_document_list')
+    return render(request, 'admin/documents/delete.html', {'doc': doc})
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_document_toggle_status(request, pk):
+    """Activate/Deactivate document"""
+    doc = get_object_or_404(StudentDocument, pk=pk)
+    doc.is_active = not doc.is_active
+    doc.save()
+    status = "activated" if doc.is_active else "deactivated"
+    messages.success(request, f"📄 Document {status} successfully!")
+    return redirect('admin_document_list')
+
+
+# ===== STUDENT VIEWS =====
+
+@login_required
+def student_documents(request):
+    """Student view their documents"""
+    if not hasattr(request.user, 'student_profile'):
+        messages.error(request, "❌ You are not a student!")
+        return redirect('student_dashboard')
+    
+    student = request.user.student_profile
+    documents = StudentDocument.objects.filter(student=student, is_active=True).order_by('-uploaded_at')
+    
+    context = {
+        'documents': documents,
+        'student': student,
+    }
+    return render(request, 'student/documents.html', context)

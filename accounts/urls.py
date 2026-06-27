@@ -10,61 +10,97 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
 
-    # ===== ADMIN DASHBOARD & ACTIONS =====
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('assign-supervisor/<int:synopsis_id>/', views.assign_supervisor, name='assign_supervisor'),
-    path('approve-synopsis/<int:synopsis_id>/', views.approve_synopsis, name='approve_synopsis'),
-    path('reject-synopsis/<int:synopsis_id>/', views.reject_synopsis, name='reject_synopsis'),
+    # ============================================
+    # ========== 🔴 ADMIN PANEL URLs ==========
+    # ============================================
+
+    # ===== ADMIN DASHBOARD =====
+    path('admin-panel-2026-secure/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-panel-2026-secure/assign-supervisor/<int:synopsis_id>/', views.assign_supervisor, name='assign_supervisor'),
+    path('admin-panel-2026-secure/approve-synopsis/<int:synopsis_id>/', views.approve_synopsis, name='approve_synopsis'),
+    path('admin-panel-2026-secure/reject-synopsis/<int:synopsis_id>/', views.reject_synopsis, name='reject_synopsis'),
 
     # ===== ADMIN STUDENT MANAGEMENT =====
-    path('admin/students/', views.admin_student_list, name='admin_student_list'),
-    path('admin/students/create/', views.admin_student_create, name='admin_student_create'),
-    path('admin/students/<int:pk>/', views.admin_student_detail, name='admin_student_detail'),
-    path('admin/students/<int:pk>/update/', views.admin_student_update, name='admin_student_update'),
-    path('admin/students/<int:pk>/delete/', views.admin_student_delete, name='admin_student_delete'),
+    path('admin-panel-2026-secure/students/', views.admin_student_list, name='admin_student_list'),
+    path('admin-panel-2026-secure/students/create/', views.admin_student_create, name='admin_student_create'),
+    path('admin-panel-2026-secure/students/<int:pk>/', views.admin_student_detail, name='admin_student_detail'),
+    path('admin-panel-2026-secure/students/<int:pk>/update/', views.admin_student_update, name='admin_student_update'),
+    path('admin-panel-2026-secure/students/<int:pk>/delete/', views.admin_student_delete, name='admin_student_delete'),
 
     # ===== ADMIN SUPERVISOR MANAGEMENT =====
-    path('admin/supervisors/', views.admin_supervisor_list, name='admin_supervisor_list'),
-    path('admin/supervisors/create/', views.admin_supervisor_create, name='admin_supervisor_create'),
-    path('admin/supervisors/<int:pk>/', views.admin_supervisor_detail, name='admin_supervisor_detail'),
-    path('admin/supervisors/<int:pk>/update/', views.admin_supervisor_update, name='admin_supervisor_update'),
-    path('admin/supervisors/<int:pk>/delete/', views.admin_supervisor_delete, name='admin_supervisor_delete'),
+    path('admin-panel-2026-secure/supervisors/', views.admin_supervisor_list, name='admin_supervisor_list'),
+    path('admin-panel-2026-secure/supervisors/create/', views.admin_supervisor_create, name='admin_supervisor_create'),
+    path('admin-panel-2026-secure/supervisors/<int:pk>/', views.admin_supervisor_detail, name='admin_supervisor_detail'),
+    path('admin-panel-2026-secure/supervisors/<int:pk>/update/', views.admin_supervisor_update, name='admin_supervisor_update'),
+    path('admin-panel-2026-secure/supervisors/<int:pk>/delete/', views.admin_supervisor_delete, name='admin_supervisor_delete'),
 
-    # ===== ADMIN SYNOPSIS MANAGEMENT =====
-    path('admin/synopsis/', views.admin_synopsis_list, name='admin_synopsis_list'),
-    path('admin/synopsis/<int:pk>/', views.admin_synopsis_detail, name='admin_synopsis_detail'),
-    path('admin/synopsis/<int:pk>/assign/', views.admin_synopsis_assign, name='admin_synopsis_assign'),
-    path('admin/synopsis/<int:pk>/approve/', views.admin_synopsis_approve, name='admin_synopsis_approve'),
-    path('admin/synopsis/<int:pk>/reject/', views.admin_synopsis_reject, name='admin_synopsis_reject'),
+    # ===== ADMIN SYNOPSIS MANAGEMENT (ENHANCED) =====
+path('admin-panel-2026-secure/synopsis/', views.admin_synopsis_list, name='admin_synopsis_list'),
+path('admin-panel-2026-secure/synopsis/<int:pk>/', views.admin_synopsis_detail, name='admin_synopsis_detail'),
+path('admin-panel-2026-secure/synopsis/upload/', views.admin_synopsis_upload, name='admin_synopsis_upload'),
+path('admin-panel-2026-secure/synopsis/<int:pk>/download/', views.admin_synopsis_download, name='admin_synopsis_download'),
+path('admin-panel-2026-secure/synopsis/<int:pk>/view-pdf/', views.admin_synopsis_view_pdf, name='admin_synopsis_view_pdf'),
+path('admin-panel-2026-secure/synopsis/<int:pk>/delete/', views.admin_synopsis_delete_confirm, name='admin_synopsis_delete'),
+path('admin-panel-2026-secure/synopsis/<int:pk>/assign/', views.admin_synopsis_assign, name='admin_synopsis_assign'),
+path('admin-panel-2026-secure/synopsis/<int:pk>/approve/', views.admin_synopsis_approve, name='admin_synopsis_approve'),
+path('admin-panel-2026-secure/synopsis/<int:pk>/reject/', views.admin_synopsis_reject, name='admin_synopsis_reject'),
 
-    # ===== ADMIN THESIS MANAGEMENT =====
-    path('admin/thesis/', views.admin_thesis_list, name='admin_thesis_list'),
-    path('admin/thesis/<int:pk>/', views.admin_thesis_detail, name='admin_thesis_detail'),
-    path('admin/thesis/<int:pk>/update-status/', views.admin_thesis_update_status, name='admin_thesis_update_status'),
-    # Thesis examiner assignment, viva, finalize
-    path('admin/thesis/<int:pk>/assign-examiners/', views.admin_thesis_assign_examiners, name='admin_thesis_assign_examiners'),
-    path('admin/thesis/<int:pk>/record-viva/', views.admin_thesis_record_viva, name='admin_thesis_record_viva'),
-    path('admin/thesis/<int:pk>/finalize/', views.admin_thesis_finalize, name='admin_thesis_finalize'),
-
+   # ===== ADMIN THESIS MANAGEMENT (ENHANCED) =====
+path('admin-panel-2026-secure/thesis/', views.admin_thesis_list, name='admin_thesis_list'),
+path('admin-panel-2026-secure/thesis/<int:pk>/', views.admin_thesis_detail, name='admin_thesis_detail'),
+path('admin-panel-2026-secure/thesis/upload/', views.admin_thesis_upload, name='admin_thesis_upload'),
+path('admin-panel-2026-secure/thesis/<int:pk>/download/', views.admin_thesis_download, name='admin_thesis_download'),
+path('admin-panel-2026-secure/thesis/<int:pk>/view-pdf/', views.admin_thesis_view_pdf, name='admin_thesis_view_pdf'),
+path('admin-panel-2026-secure/thesis/<int:pk>/delete/', views.admin_thesis_delete_confirm, name='admin_thesis_delete'),
+path('admin-panel-2026-secure/thesis/<int:pk>/update-status/', views.admin_thesis_update_status, name='admin_thesis_update_status'),
+path('admin-panel-2026-secure/thesis/<int:pk>/assign-examiners/', views.admin_thesis_assign_examiners, name='admin_thesis_assign_examiners'),
+path('admin-panel-2026-secure/thesis/<int:pk>/record-viva/', views.admin_thesis_record_viva, name='admin_thesis_record_viva'),
+path('admin-panel-2026-secure/thesis/<int:pk>/finalize/', views.admin_thesis_finalize, name='admin_thesis_finalize'),
     # ===== ADMIN PROGRESS REPORTS MANAGEMENT =====
-    path('admin/progress/', views.admin_progress_list, name='admin_progress_list'),
-    path('admin/progress/<int:pk>/', views.admin_progress_detail, name='admin_progress_detail'),
+    path('admin-panel-2026-secure/progress/', views.admin_progress_list, name='admin_progress_list'),
+    path('admin-panel-2026-secure/progress/<int:pk>/', views.admin_progress_detail, name='admin_progress_detail'),
 
-    # ===== ADMIN MEETINGS MANAGEMENT =====
-    path('admin/meetings/', views.admin_meeting_list, name='admin_meeting_list'),
-    path('admin/meetings/<int:pk>/', views.admin_meeting_detail, name='admin_meeting_detail'),
+    # ===== ADMIN MEETING MANAGEMENT (ENHANCED) =====
+path('admin-panel-2026-secure/meetings/', views.admin_meeting_list, name='admin_meeting_list'),
+path('admin-panel-2026-secure/meetings/create/', views.admin_meeting_create, name='admin_meeting_create'),
+path('admin-panel-2026-secure/meetings/<int:pk>/', views.admin_meeting_detail, name='admin_meeting_detail'),
+path('admin-panel-2026-secure/meetings/<int:pk>/edit/', views.admin_meeting_edit, name='admin_meeting_edit'),
+path('admin-panel-2026-secure/meetings/<int:pk>/delete/', views.admin_meeting_delete_confirm, name='admin_meeting_delete'),
+    # ===== ADMIN EXAMINER MANAGEMENT =====
+    path('admin-panel-2026-secure/examiners/', views.admin_examiner_list, name='admin_examiner_list'),
+    path('admin-panel-2026-secure/examiners/create/', views.admin_examiner_create, name='admin_examiner_create'),
+    path('admin-panel-2026-secure/examiners/<int:pk>/', views.admin_examiner_detail, name='admin_examiner_detail'),
+    path('admin-panel-2026-secure/examiners/<int:pk>/update/', views.admin_examiner_update, name='admin_examiner_update'),
+    path('admin-panel-2026-secure/examiners/<int:pk>/delete/', views.admin_examiner_delete, name='admin_examiner_delete'),
 
     # ===== ADMIN EXTENSIONS MANAGEMENT =====
-    path('admin/extensions/', views.admin_extension_list, name='admin_extension_list'),
-    path('admin/extensions/<int:pk>/', views.admin_extension_detail, name='admin_extension_detail'),
-    path('admin/extensions/<int:pk>/approve/', views.admin_extension_approve, name='admin_extension_approve'),
-    path('admin/extensions/<int:pk>/reject/', views.admin_extension_reject, name='admin_extension_reject'),
+    path('admin-panel-2026-secure/extensions/', views.admin_extension_list, name='admin_extension_list'),
+    path('admin-panel-2026-secure/extensions/<int:pk>/', views.admin_extension_detail, name='admin_extension_detail'),
+    path('admin-panel-2026-secure/extensions/<int:pk>/approve/', views.admin_extension_approve, name='admin_extension_approve'),
+    path('admin-panel-2026-secure/extensions/<int:pk>/reject/', views.admin_extension_reject, name='admin_extension_reject'),
 
-    # ===== ADMIN DEGREE LETTER MANAGEMENT (NEW) =====
-    path('admin/degree/', views.admin_degree_list, name='admin_degree_list'),
-    path('admin/degree/<int:pk>/', views.admin_degree_detail, name='admin_degree_detail'),
-    path('admin/degree/<int:pk>/verify/', views.admin_degree_verify, name='admin_degree_verify'),
-    path('admin/degree/<int:pk>/issue/', views.admin_degree_issue, name='admin_degree_issue'),
+    # ===== ADMIN DEGREE LETTER MANAGEMENT (ENHANCED) =====
+path('admin-panel-2026-secure/degree/', views.admin_degree_list, name='admin_degree_list'),
+path('admin-panel-2026-secure/degree/<int:pk>/', views.admin_degree_detail, name='admin_degree_detail'),
+path('admin-panel-2026-secure/degree/upload/', views.admin_degree_upload, name='admin_degree_upload'),
+path('admin-panel-2026-secure/degree/<int:pk>/download/', views.admin_degree_download, name='admin_degree_download'),
+path('admin-panel-2026-secure/degree/<int:pk>/view-pdf/', views.admin_degree_view_pdf, name='admin_degree_view_pdf'),
+path('admin-panel-2026-secure/degree/<int:pk>/delete/', views.admin_degree_delete_confirm, name='admin_degree_delete'),
+path('admin-panel-2026-secure/degree/<int:pk>/verify/', views.admin_degree_verify, name='admin_degree_verify'),
+path('admin-panel-2026-secure/degree/<int:pk>/issue/', views.admin_degree_issue, name='admin_degree_issue'),
+
+    # ============================================
+    # ========== 📄 ADMIN STUDENT DOCUMENTS (NEW) ==========
+    # ============================================
+    path('admin-panel-2026-secure/documents/', views.admin_document_list, name='admin_document_list'),
+    path('admin-panel-2026-secure/documents/upload/', views.admin_document_upload, name='admin_document_upload'),
+    path('admin-panel-2026-secure/documents/<int:pk>/', views.admin_document_detail, name='admin_document_detail'),
+    path('admin-panel-2026-secure/documents/<int:pk>/delete/', views.admin_document_delete, name='admin_document_delete'),
+    path('admin-panel-2026-secure/documents/<int:pk>/toggle/', views.admin_document_toggle_status, name='admin_document_toggle'),
+
+    # ============================================
+    # ========== 🟢 SUPERVISOR URLs ==========
+    # ============================================
 
     # ===== SUPERVISOR DASHBOARD =====
     path('supervisor-dashboard/', views.supervisor_dashboard, name='supervisor_dashboard'),
@@ -101,14 +137,22 @@ urlpatterns = [
     path('supervisor/profile/update/', views.supervisor_profile_update, name='supervisor_profile_update'),
     path('supervisor/profile/change-password/', views.supervisor_change_password, name='supervisor_change_password'),
 
-    # ===== EXAMINER =====
+    # ============================================
+    # ========== 🟢 EXAMINER URLs ==========
+    # ============================================
     path('examiner/dashboard/', views.examiner_dashboard, name='examiner_dashboard'),
     path('examiner/thesis/<int:pk>/', views.examiner_thesis_detail, name='examiner_thesis_detail'),
     path('examiner/evaluation/<int:pk>/submit/', views.examiner_evaluation_submit, name='examiner_evaluation_submit'),
 
-    # ===== NOTIFICATIONS (COMMON) =====
+    # ============================================
+    # ========== NOTIFICATIONS (COMMON) ==========
+    # ============================================
     path('notifications/mark-all-read/', views.mark_all_read, name='mark_all_read'),
     path('notifications/', views.all_notifications, name='all_notifications'),
+
+    # ============================================
+    # ========== 🟢 STUDENT URLs ==========
+    # ============================================
 
     # ===== STUDENT DASHBOARD =====
     path('student-dashboard/', views.student_dashboard, name='student_dashboard'),
@@ -142,11 +186,16 @@ urlpatterns = [
     # ===== STUDENT DEGREE LETTER =====
     path('student/degree/request/', views.student_degree_request, name='student_degree_request'),
     
+    # ===== 📄 STUDENT DOCUMENTS (NEW) =====
+    path('student/documents/', views.student_documents, name='student_documents'),
+    
     # ===== STUDENT PROFILE =====
     path('student/profile/update/', views.student_profile_update, name='student_profile_update'),
     path('student/profile/change-password/', views.student_change_password, name='student_change_password'),
 
-    # ===== REPORTS & ANALYTICS =====
+    # ============================================
+    # ========== 📊 REPORTS & ANALYTICS ==========
+    # ============================================
     path('reports/', views.reports_dashboard, name='reports_dashboard'),
     path('reports/student-progress/', views.student_progress_report, name='student_progress_report'),
     path('reports/supervisor-workload/', views.supervisor_workload_report, name='supervisor_workload_report'),
