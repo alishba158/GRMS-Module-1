@@ -1,11 +1,10 @@
-[phases.setup]
-nixPkgs = ["python312", "python312Packages.pip", "pkg-config", "libmysqlclient"]
+providers = ["python"]
 
 [phases.install]
-cmds = ["python3.12 -m pip install -r requirements.txt"]
+cmds = ["pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["python3.12 manage.py collectstatic --no-input"]
+cmds = ["python manage.py collectstatic --no-input"]
 
 [start]
-cmd = "python3.12 -m gunicorn grms_project.wsgi:application"
+cmd = "gunicorn grms_project.wsgi:application"
